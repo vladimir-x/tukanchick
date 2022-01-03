@@ -1,0 +1,12 @@
+{
+  "name": "tukanchick",
+  "version": "0.0.1",
+  "description": "Web port for board game: Trails of Tucana",
+  "main": "main.js",
+  "dependencies": {
+  },
+  "scripts": {
+    "build": "tsc -w",
+    "start": "startserver"
+  }
+}
