@@ -1,39 +1,17 @@
 import * as Phaser from "phaser";
-
-class MyGame extends Phaser.Scene
-{
-    constructor ()
-    {
-        super("");
-    }
-
-    preload ()
-    {
-        this.load.image('logo', "assets/logo.png");
-    }
-      
-    create ()
-    {
-
-        const logo = this.add.image(400, 150, 'logo');
-      
-        this.tweens.add({
-            targets: logo,
-            y: 450,
-            duration: 2000,
-            ease: "Power2",
-            yoyo: true,
-            loop: -1
-        });
-    }
-}
+import MainMenuScene from "./scene/main-menu.scene";
+import MapScene from "./scene/map.scene";
 
 const config = {
     type: Phaser.AUTO,
-    parent: 'phaser-example',
-    width: 800,
-    height: 600,
-    scene: MyGame
-};
+    parent: 'main-screen',
+    fullscreenTarget: 'main-screen',
+    scene: [MainMenuScene, MapScene],
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        zoom: 1,
+    }
+} as Phaser.Types.Core.GameConfig;
 
-const game = new Phaser.Game(config);
+export const game = new Phaser.Game(config);
+
