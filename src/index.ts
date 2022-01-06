@@ -8,7 +8,7 @@ const config = {
     parent: 'main-screen',
     fullscreenTarget: 'main-screen',
     scene: [MainMenuScene, MapScene],
-   // scene: [MapScene , MainMenuScene, ],
+  //  scene: [MapScene , MainMenuScene, ],
     scale: {
         autoCenter: Center.NO_CENTER,
         mode: Phaser.Scale.RESIZE,

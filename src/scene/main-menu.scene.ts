@@ -33,11 +33,11 @@ export default class MainMenuScene extends Phaser.Scene {
 
 
         playPetitButton.setInteractive().on("pointerup", () => {
-            this.scene.start(ScenesEnum.MAP, new MapConfig(IslandEnum.PETIT))
+            this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT})
         })
 
         playGrandeButton.setInteractive().on("pointerup", () => {
-            this.scene.start(ScenesEnum.MAP, new MapConfig(IslandEnum.GRANDE))
+            this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE})
         })
 
         this.scale.startFullscreen()

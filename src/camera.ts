@@ -17,8 +17,6 @@ export function configCamera(scene: Phaser.Scene, maxWidth: number, maxHeight: n
 
     scene.input.on("pointerdown", (pointer: any) => {
 
-        console.log(camera)
-
         dragging = true
 
         downX = pointer.x
