@@ -15,6 +15,8 @@ export default class MapScene extends Phaser.Scene {
 
     hexagons: Hexagon[];
 
+    selected: Set<Hexagon>;
+
     preload() {
 
         this.mapConfig = this.getConfigOrDefault()
@@ -36,19 +38,73 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
-    create() {
+    create(hexagon: Hexagon) {
         const map = this.add.image(0, 0, "map").setOrigin(0, 0)
 
         this.hexagons = this.cache.json.get("hexagons");
 
         //this.hexagons = calculatePoints(this.cache.json.get("hexagons")[0], this.mapConfig.island);
+        //this.drawHexagons();
 
-        this.drawHexagons();
+        this.hexagons.forEach((h) => {
+                let downX = 0
+                let downY = 0
+
+                h.polygonGeom = new Phaser.Geom.Polygon(h.points)
+                h.polygonGameObject = this.add.polygon(0, 0, h.points).setOrigin(0, 0)
+
+                h.polygonGameObject
+                    .setInteractive(h.polygonGeom,
+                        (hitArea: Phaser.Geom.Polygon, x: number, y: number) => hitArea.contains(x, y))
+                    .on('pointerdown', (pointer: any, localX: any, localY: any, event: any) => {
+                        downX = localX
+                        downY = localY
+                    })
+                    .on('pointerup', (pointer: any, localX: any, localY: any, event: any) => {
+                        if (downX == localX && downY == localY) {
+
+                            this.onClick(h)
+                        }
+                    })
+            }
+        )
+
+        this.selected = new Set<Hexagon>()
 
         configCamera(this, map.width, map.height)
     }
 
-    private drawHexagons(){
+    update(time: number, delta: number) {
+    }
+
+    private onClick(hexagon: Hexagon) {
+
+        if (this.selected.has(hexagon)) {
+            this.removeFromSelected(hexagon)
+        } else if (this.selected.size < 2) {
+            this.addToSelected(hexagon)
+        }
+    }
+
+    private addToSelected(hexagon: Hexagon) {
+        this.selected.add(hexagon)
+        hexagon.polygonGameObject.setFillStyle(0x61b65f, 0.6)
+    }
+
+    private removeFromSelected(hexagon: Hexagon) {
+        this.selected.delete(hexagon)
+        hexagon.polygonGameObject.isFilled = false
+    }
+
+    private clearSelected(hexagon: Hexagon) {
+        this.selected.forEach((h) =>
+            h.polygonGameObject.isFilled = false
+        )
+        this.selected.clear()
+    }
+
+
+    private drawHexagons() {
         this.hexagons.forEach((hexagon) => {
             for (let i = 0; i < hexagon.points.length; ++i) {
                 let a = hexagon.points[i];

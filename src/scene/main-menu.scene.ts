@@ -40,8 +40,6 @@ export default class MainMenuScene extends Phaser.Scene {
             this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE})
         })
 
-        this.scale.startFullscreen()
-
     }
 
     update() {

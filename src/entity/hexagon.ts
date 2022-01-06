@@ -7,4 +7,8 @@ export interface Hexagon {
     points: Vector2Like[];
 
     neighbours: number[];
+
+    //
+    polygonGeom?: Phaser.Geom.Polygon
+    polygonGameObject?: Phaser.GameObjects.Polygon
 }
