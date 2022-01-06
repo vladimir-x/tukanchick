@@ -1,11 +1,12 @@
 import * as Phaser from "phaser";
 import {MapConfig} from "../entity/mapConfig";
 import {IslandEnum} from "../enums/islands.enum";
+import {ScenesEnum} from "../enums/scenes.enum";
 
 export default class MainMenuScene extends Phaser.Scene {
 
     constructor() {
-        super('main-menu.scene')
+        super(ScenesEnum.MAIN_MENU)
     }
 
     preload() {
@@ -32,13 +33,11 @@ export default class MainMenuScene extends Phaser.Scene {
 
 
         playPetitButton.setInteractive().on("pointerup", () => {
-            console.log('playPetitButton !!!')
-            this.scene.start("map.scene", new MapConfig(IslandEnum.PETIT))
+            this.scene.start(ScenesEnum.MAP, new MapConfig(IslandEnum.PETIT))
         })
 
         playGrandeButton.setInteractive().on("pointerup", () => {
-            console.log('playGrandeButton !!!')
-            this.scene.start("map.scene", new MapConfig(IslandEnum.GRANDE))
+            this.scene.start(ScenesEnum.MAP, new MapConfig(IslandEnum.GRANDE))
         })
 
         this.scale.startFullscreen()
