@@ -11,7 +11,7 @@ import Vector2Like = Phaser.Types.Math.Vector2Like;
 
 export default class MapScene extends Phaser.Scene {
 
-    static emitter: Phaser.Events.EventEmitter;
+    static emitter: Phaser.Events.EventEmitter = new Phaser.Events.EventEmitter()
 
 
     mapConfig: MapConfig
@@ -29,7 +29,7 @@ export default class MapScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAP);
 
-        MapScene.emitter = new Phaser.Events.EventEmitter()
+        MapScene.emitter.destroy()
     }
 
     preload() {
@@ -84,11 +84,11 @@ export default class MapScene extends Phaser.Scene {
                 polygonGameObject
                     .setInteractive(polygonGeom,
                         (hitArea: Phaser.Geom.Polygon, x: number, y: number) => hitArea.contains(x, y))
-                    .on('pointerdown', (pointer: any, localX: any, localY: any, event: any) => {
+                    .on('pointerdown', (pointer: any, localX: any, localY: any) => {
                         downX = localX
                         downY = localY
                     })
-                    .on('pointerup', (pointer: any, localX: any, localY: any, event: any) => {
+                    .on('pointerup', (pointer: any, localX: any, localY: any) => {
                         if (downX == localX && downY == localY) {
 
                             this.onClick(h)
