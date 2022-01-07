@@ -1,9 +1,9 @@
 import * as Phaser from "phaser";
-import {ScenesEnum} from "../enums/scenes.enum";
-import {Button} from "../controls/button";
+import {ScenesEnum} from "../../enums/scenes.enum";
+import {Button} from "../../controls/button";
 import MapScene from "./map.scene";
-import {EventsEnum} from "../enums/events.enum";
-import {PlayerInfo} from "../entity/playerInfo";
+import {EventsEnum} from "../../enums/events.enum";
+import {PlayerInfo} from "../../entity/playerInfo";
 
 export default class MapControlsScene extends Phaser.Scene {
 

@@ -1,5 +1,5 @@
-import {Hexagon} from "../entity/hexagon";
-import {IslandEnum} from "../enums/islands.enum";
+import {Hexagon} from "../../entity/hexagon";
+import {IslandEnum} from "../../enums/islands.enum";
 
 export function calculatePoints(firstHex: Hexagon, island: IslandEnum): Hexagon[] {
 

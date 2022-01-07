@@ -1,12 +1,12 @@
 import * as Phaser from "phaser";
-import {MapConfig} from "../entity/mapConfig";
-import {IslandEnum} from "../enums/islands.enum";
-import {Assets} from "../assets";
-import {ScenesEnum} from "../enums/scenes.enum";
-import {configCamera} from "../camera";
-import {Hexagon} from "../entity/hexagon";
-import {PlayerInfo} from "../entity/playerInfo";
-import {EventsEnum} from "../enums/events.enum";
+import {MapConfig} from "../../entity/mapConfig";
+import {IslandEnum} from "../../enums/islands.enum";
+import {Assets} from "../../assets";
+import {ScenesEnum} from "../../enums/scenes.enum";
+import {configCamera} from "./camera";
+import {Hexagon} from "../../entity/hexagon";
+import {PlayerInfo} from "../../entity/playerInfo";
+import {EventsEnum} from "../../enums/events.enum";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
 
 export default class MapScene extends Phaser.Scene {

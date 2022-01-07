@@ -1,8 +1,8 @@
 import * as Phaser from "phaser";
-import MainMenuScene from "./scene/main-menu.scene";
-import MapScene from "./scene/map.scene";
+import MapScene from "./scene/map/map.scene";
 import Center = Phaser.Scale.Center;
-import MapControlsScene from "./scene/map-controls.scene";
+import MainMenuScene from "./scene/main-menu/mainMenu.scene";
+import MapControlsScene from "./scene/map/mapControls.scene";
 
 const config = {
     type: Phaser.AUTO,

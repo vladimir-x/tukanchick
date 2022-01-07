@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
-import {IslandEnum} from "../enums/islands.enum";
-import {ScenesEnum} from "../enums/scenes.enum";
-import {Button} from "../controls/button";
+import {IslandEnum} from "../../enums/islands.enum";
+import {ScenesEnum} from "../../enums/scenes.enum";
+import {Button} from "../../controls/button";
 
 export default class MainMenuScene extends Phaser.Scene {
 
