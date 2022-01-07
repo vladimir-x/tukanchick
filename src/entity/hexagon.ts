@@ -8,7 +8,4 @@ export interface Hexagon {
 
     neighbours: number[];
 
-    //
-    polygonGeom?: Phaser.Geom.Polygon
-    polygonGameObject?: Phaser.GameObjects.Polygon
 }

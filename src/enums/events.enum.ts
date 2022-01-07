@@ -1,0 +1,7 @@
+export enum EventsEnum {
+    MAKE_ROAD = "MAKE_ROAD",
+    MAKE_ROAD_AFTER = "MAKE_ROAD_AFTER",
+
+    START_ROUND = "START_ROUND",
+    START_ROUND_AFTER = "START_ROUND_AFTER",
+}
