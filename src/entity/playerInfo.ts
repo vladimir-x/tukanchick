@@ -1,11 +1,16 @@
+import {GroundsEnum} from "../enums/grounds.enum";
 
 export interface PlayerInfo {
 
     name: string
 
-    round: number
+    turn: number
 
-    roundComplete: boolean
+    turnComplete: boolean
+
+    groundA: GroundsEnum
+
+    groundB: GroundsEnum
 
     selectA: number
 

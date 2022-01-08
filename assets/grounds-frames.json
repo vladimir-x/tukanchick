@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "version": "1.0",
+    "image": "grounds-frames.jpg",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1003,
+      "h": 235
+    },
+    "scale": "1"
+  },
+  "frames": [
+    {
+      "filename": "SAND",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 234
+      }
+    },
+    {
+      "filename": "FOREST",
+      "frame": {
+        "x": 200,
+        "y": 0,
+        "w": 200,
+        "h": 234
+      }
+    },
+    {
+      "filename": "ROCK",
+      "frame": {
+        "x": 400,
+        "y": 0,
+        "w": 200,
+        "h": 234
+      }
+    },
+    {
+      "filename": "WATER",
+      "frame": {
+        "x": 600,
+        "y": 0,
+        "w": 200,
+        "h": 234
+      }
+    },
+    {
+      "filename": "JOKER",
+      "frame": {
+        "x": 800,
+        "y": 0,
+        "w": 200,
+        "h": 234
+      }
+    }
+  ]
+}

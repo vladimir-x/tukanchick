@@ -9,7 +9,7 @@ const config = {
     parent: 'main-screen',
     fullscreenTarget: 'main-screen',
     scene: [MainMenuScene, MapScene, MapControlsScene],
-  // scene: [MapScene , MainMenuScene, MapControlsScene ],
+  //  scene: [MapScene , MainMenuScene, MapControlsScene ],
     scale: {
         autoCenter: Center.NO_CENTER,
         mode: Phaser.Scale.RESIZE,

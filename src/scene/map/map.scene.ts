@@ -7,6 +7,7 @@ import {configCamera} from "./camera";
 import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
+import Deck from "./deck";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
 
 export default class MapScene extends Phaser.Scene {
@@ -25,6 +26,8 @@ export default class MapScene extends Phaser.Scene {
     playerInfo: PlayerInfo
 
     roads: Map<number, number>
+
+    deck: Deck
 
     constructor() {
         super(ScenesEnum.MAP);
@@ -63,8 +66,6 @@ export default class MapScene extends Phaser.Scene {
             this.hexagons.set(h.index, h)
         })
 
-        //this.hexagons = calculatePoints(this.cache.json.get("hexagons")[0], this.mapConfig.island);
-        //this.drawHexagons();
 
         this.polygonGeoms = new Map()
 
@@ -80,6 +81,8 @@ export default class MapScene extends Phaser.Scene {
 
                 this.polygonGeoms.set(h.index, polygonGeom)
                 this.polygonGameObjects.set(h.index, polygonGameObject)
+
+                //this.drawHexagons(h)
 
                 polygonGameObject
                     .setInteractive(polygonGeom,
@@ -104,10 +107,12 @@ export default class MapScene extends Phaser.Scene {
 
         this.roads = new Map()
 
+        this.deck = new Deck()
+
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
         MapScene.emitter.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
-        MapScene.emitter.on(EventsEnum.START_ROUND, this.startRound, this)
+        MapScene.emitter.on(EventsEnum.START_TURN, this.startTurn, this)
 
         //----
         configCamera(this, map.width, map.height)
@@ -123,14 +128,17 @@ export default class MapScene extends Phaser.Scene {
     private initPlayer(name: string): PlayerInfo {
         return {
             name: name,
-            round: 0, bonusRoad: 0, roundComplete: false, selectA: 0, selectB: 0
+            turn: 0, bonusRoad: 0, turnComplete: false, selectA: 0, selectB: 0,
+            groundA: undefined, groundB: undefined
         }
     }
 
     private onClick(hexagon: Hexagon) {
 
-        if (!this.playerInfo.roundComplete) {
+        if (!this.playerInfo.turnComplete) {
             const hexagonIndex = hexagon.index
+
+            // Добавить проверку на совпадение по типу земель
 
             if (this.playerInfo.selectA == hexagonIndex) {
                 this.playerInfo.selectA = null
@@ -171,7 +179,7 @@ export default class MapScene extends Phaser.Scene {
 
     private makeRoad() {
 
-        if (!this.playerInfo.roundComplete && this.playerInfo.selectA && this.playerInfo.selectB) {
+        if (!this.playerInfo.turnComplete && this.playerInfo.selectA && this.playerInfo.selectB) {
 
             const pointA = this.hexagonCenter(this.hexagons.get(this.playerInfo.selectA))
             const pointB = this.hexagonCenter(this.hexagons.get(this.playerInfo.selectB))
@@ -183,17 +191,29 @@ export default class MapScene extends Phaser.Scene {
             this.clearSelected()
 
             //----
-            this.playerInfo.roundComplete = true
+            this.playerInfo.turnComplete = true
             MapScene.emitter.emit(EventsEnum.MAKE_ROAD_AFTER)
         }
 
     }
 
-    private startRound() {
-        this.playerInfo.round++
-        this.playerInfo.roundComplete = false
+    private startTurn() {
 
-        MapScene.emitter.emit(EventsEnum.START_ROUND_AFTER)
+        this.playerInfo.groundA = this.deck.pop()
+        this.playerInfo.groundB = this.deck.pop()
+
+        if (this.playerInfo.groundA && this.playerInfo.groundB) {
+
+            this.playerInfo.turn++
+            this.playerInfo.turnComplete = false
+
+
+            MapScene.emitter.emit(EventsEnum.START_TURN_AFTER)
+
+        } else {
+            // ЗАКОНЧИЛСЯ РАУНД!!!
+            alert('END ROUND')
+        }
     }
 
     private hexagonCenter(hexagon: Hexagon): Vector2Like {
@@ -203,20 +223,32 @@ export default class MapScene extends Phaser.Scene {
         }
     }
 
-    private drawHexagons() {
-        this.hexagons.forEach((hexagon) => {
-            for (let i = 0; i < hexagon.points.length; ++i) {
-                let a = hexagon.points[i];
-                let b = i + 1 < hexagon.points.length ? hexagon.points[i + 1] : hexagon.points[0]
+    private drawHexagons(hexagon: Hexagon) {
+        for (let i = 0; i < hexagon.points.length; ++i) {
+            let a = hexagon.points[i];
+            let b = i + 1 < hexagon.points.length ? hexagon.points[i + 1] : hexagon.points[0]
 
-                this.add.line(0, 0, a.x, a.y, b.x, b.y, 0xff0000).setOrigin(0, 0)
-            }
-            //
-            this.add.text(hexagon.points[0].x - 10, hexagon.points[0].y + 10, hexagon.index.toString())
-                .setOrigin(0, 0)
-                .setColor("#000000")
-                .setFontSize(50)
-        })
+            this.add.line(0, 0, a.x, a.y, b.x, b.y, 0xff0000).setOrigin(0, 0)
+        }
+        //
+
+        this.add.text(hexagon.points[0].x - 10, hexagon.points[0].y + 10, hexagon.index.toString())
+            .setOrigin(0, 0)
+            .setColor("#000000")
+            .setFontSize(50)
+
+        /*this.add.text(hexagon.points[0].x - 60, hexagon.points[0].y + 50, hexagon.ground)
+            .setOrigin(0, 0)
+            .setColor("#000000")
+            .setFontSize(50)*/
+
+        /*
+        this.add.text(hexagon.points[0].x - 60, hexagon.points[0].y + 50, hexagon.artifact)
+            .setOrigin(0, 0)
+            .setColor("#000000")
+            .setFontSize(50)
+        */
+
     }
 
 
@@ -227,7 +259,7 @@ export default class MapScene extends Phaser.Scene {
             return res
         } else {
             return {
-                island: IslandEnum.GRANDE
+                island: IslandEnum.PETIT
             }
         }
     }

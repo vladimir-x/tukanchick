@@ -31,7 +31,9 @@ export function calculatePoints(firstHex: Hexagon, island: IslandEnum): Hexagon[
             let curHex: Hexagon = {
                 index: allHexagons.length,
                 points: prevHex.points.map((p) => ({x: p.x + diffLineX, y: p.y})),
-                neighbours: []
+                neighbours: [],
+                ground: undefined,
+                artifact: undefined,
             }
             allHexagons.push(curHex)
             prevHex = curHex
@@ -41,7 +43,10 @@ export function calculatePoints(firstHex: Hexagon, island: IslandEnum): Hexagon[
         const nextLineFirstHex: Hexagon = {
             index: allHexagons.length,
             points: firstHex.points.map((p) => ({x: p.x + diffNextLineX, y: p.y + diffNextLineY})),
-            neighbours: []
+            neighbours: [],
+            ground: undefined,
+            artifact: undefined,
+
         }
         allHexagons.push(nextLineFirstHex)
 
