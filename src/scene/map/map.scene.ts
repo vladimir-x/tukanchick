@@ -8,6 +8,7 @@ import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
 import Deck from "./deck";
+import {GroundsEnum} from "../../enums/grounds.enum";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
 
 export default class MapScene extends Phaser.Scene {
@@ -129,7 +130,8 @@ export default class MapScene extends Phaser.Scene {
         return {
             name: name,
             turn: 0, bonusRoad: 0, turnComplete: false, selectA: 0, selectB: 0,
-            groundA: undefined, groundB: undefined
+            groundA: undefined, groundB: undefined,
+            selectGroundA: undefined, selectGroundB: undefined,
         }
     }
 
@@ -138,28 +140,46 @@ export default class MapScene extends Phaser.Scene {
         if (!this.playerInfo.turnComplete) {
             const hexagonIndex = hexagon.index
 
-            // Добавить проверку на совпадение по типу земель
-
             if (this.playerInfo.selectA == hexagonIndex) {
-                this.playerInfo.selectA = null
+                this.playerInfo.selectA = this.playerInfo.selectB
+                this.playerInfo.selectGroundA = this.playerInfo.selectGroundB
+
+                this.playerInfo.selectB = null
+                this.playerInfo.selectGroundB = null
+
                 this.removeFromSelected(hexagonIndex)
             } else if (this.playerInfo.selectB == hexagonIndex) {
                 this.playerInfo.selectB = null
+                this.playerInfo.selectGroundB = null
                 this.removeFromSelected(hexagonIndex)
-            } else if (!this.playerInfo.selectA) {
+            } else if (!this.playerInfo.selectA
+                && (this.sameGround(this.playerInfo.groundA, hexagon.ground)
+                    || this.sameGround(this.playerInfo.groundB, hexagon.ground))) {
                 this.playerInfo.selectA = hexagonIndex
+                this.playerInfo.selectGroundA = hexagon.ground
                 this.addToSelected(hexagonIndex)
-            } else if (!this.playerInfo.selectB) {
+            } else if (!this.playerInfo.selectB
+                && (
+                    (this.sameGround(this.playerInfo.groundA, hexagon.ground) && this.sameGround(this.playerInfo.groundB, this.playerInfo.selectGroundA))
+                    ||
+                    (this.sameGround(this.playerInfo.groundB, hexagon.ground) && this.sameGround(this.playerInfo.groundA, this.playerInfo.selectGroundA))
+                )
+            ) {
                 const nIndex = this.hexagons.get(this.playerInfo.selectA)
                     .neighbours
                     .find((n) => n === hexagonIndex)
                 if (nIndex >= 0) {
                     this.playerInfo.selectB = hexagonIndex
+                    this.playerInfo.selectGroundB = hexagon.ground
                     this.addToSelected(hexagonIndex)
                 }
 
             }
         }
+    }
+
+    private sameGround(a: GroundsEnum, b: GroundsEnum): boolean {
+        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER
     }
 
     private addToSelected(hexagonIndex: number) {

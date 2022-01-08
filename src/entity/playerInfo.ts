@@ -14,6 +14,10 @@ export interface PlayerInfo {
 
     selectA: number
 
+    selectGroundA: GroundsEnum
+
+    selectGroundB: GroundsEnum
+
     selectB: number
 
     bonusRoad: number
