@@ -3,6 +3,7 @@ import {IslandEnum} from "../../enums/islands.enum";
 import {ScenesEnum} from "../../enums/scenes.enum";
 import {Button} from "../../controls/button";
 import {Assets} from "../../assets";
+import {MapConfig} from "../../entity/mapConfig";
 
 export default class MainMenuScene extends Phaser.Scene {
 
@@ -39,13 +40,13 @@ export default class MainMenuScene extends Phaser.Scene {
 
         this.petitButton.create(width * 0.5, height * 0.6,
             'Isla petit (2)',
-            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT})
+            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT, roundCount: 2} as MapConfig)
         ).setDisplaySize(buttonWidth, buttonHeight).textGO.setFontSize(20).setColor("red")
 
 
         this.grandeButton.create(width * 0.5, height * 0.6 + buttonHeight + buttonSpace,
             'Isla grande (3)',
-            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE})
+            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig)
         ).setDisplaySize(buttonWidth, buttonHeight).textGO.setFontSize(20).setColor("red")
 
     }

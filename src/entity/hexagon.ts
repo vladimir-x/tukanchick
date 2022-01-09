@@ -14,4 +14,8 @@ export interface Hexagon {
 
     artifact: ArtifactsEnum
 
+    net?: number
+
+    artifactConnected?: boolean
+
 }

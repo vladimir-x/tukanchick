@@ -10,6 +10,7 @@ import {EventsEnum} from "../../enums/events.enum";
 import Deck from "./deck";
 import {GroundsEnum} from "../../enums/grounds.enum";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
+import {ArtifactsEnum} from "../../enums/artifacts.enum";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -26,9 +27,22 @@ export default class MapScene extends Phaser.Scene {
 
     playerInfo: PlayerInfo
 
-    roads: Map<number, number>
+    // индексы соединенных гексов
+    roads: Map<number, Set<number>>
 
+    // колода кароточек с землями
     deck: Deck
+
+    // гексы при соединении перетаскиванием
+    hexA: Hexagon
+    hexB: Hexagon
+
+    // индекс сети, гекс-стартовый город
+    roadNets: Map<number, Hexagon>
+
+    artifactConnected: Map<ArtifactsEnum, number>
+
+    additionRoadProvided: Set<ArtifactsEnum>
 
     constructor() {
         super(ScenesEnum.MAP);
@@ -62,6 +76,15 @@ export default class MapScene extends Phaser.Scene {
 
         this.hexagons = new Map()
 
+        this.roads = new Map()
+
+        this.roadNets = new Map()
+
+        this.artifactConnected = new Map()
+
+        this.additionRoadProvided = new Set()
+
+
         const arrayHexagons: Hexagon[] = this.cache.json.get("hexagons")
         arrayHexagons.forEach((h) => {
             this.hexagons.set(h.index, h)
@@ -74,6 +97,11 @@ export default class MapScene extends Phaser.Scene {
 
         this.hexagons.forEach((h) => {
 
+                if (h.artifact?.startsWith("TOWN_")) {
+                    h.net = Number(h.artifact.substring(5))
+                    this.roadNets.set(h.net, h)
+                }
+
                 let downX = 0
                 let downY = 0
 
@@ -83,30 +111,39 @@ export default class MapScene extends Phaser.Scene {
                 this.polygonGeoms.set(h.index, polygonGeom)
                 this.polygonGameObjects.set(h.index, polygonGameObject)
 
-                //this.drawHexagons(h)
+                this.drawHexagons(h)
 
                 polygonGameObject
                     .setInteractive(polygonGeom,
                         (hitArea: Phaser.Geom.Polygon, x: number, y: number) => hitArea.contains(x, y))
                     .on('pointerdown', (pointer: any, localX: any, localY: any) => {
-                        downX = localX
-                        downY = localY
+                        if (pointer.leftButtonDown()) {
+                            downX = localX
+                            downY = localY
+
+                            this.hexA = h
+                        }
                     })
                     .on('pointerup', (pointer: any, localX: any, localY: any) => {
-                        if (downX == localX && downY == localY) {
+                        if (pointer.leftButtonReleased()) {
+                            if (downX == localX && downY == localY) {
 
-                            this.onClick(h)
+                                this.onClick(h)
+                            } else {
+                                this.hexB = h
+                                this.onClick(this.hexA)
+                                this.onClick(this.hexB)
+                                this.makeRoad()
+                            }
                         }
                     })
             }
         )
 
-
         //----
 
         this.playerInfo = this.initPlayer("PLAYER")
 
-        this.roads = new Map()
 
         this.deck = new Deck()
 
@@ -128,17 +165,17 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            name: name,
-            turn: 0, bonusRoad: 0, turnComplete: false, selectA: 0, selectB: 0,
-            groundA: undefined, groundB: undefined,
-            selectGroundA: undefined, selectGroundB: undefined,
+            name: name, turn: 0, bonusRoad: 0, turnComplete: false
         }
     }
 
     private onClick(hexagon: Hexagon) {
 
-        if (!this.playerInfo.turnComplete) {
+        if (!this.playerInfo.turnComplete || this.playerInfo.bonusRoad > 0) {
             const hexagonIndex = hexagon.index
+
+            const emptyA = this.playerInfo.selectA === null || this.playerInfo.selectA === undefined
+            const emptyB = this.playerInfo.selectB === null || this.playerInfo.selectB === undefined
 
             if (this.playerInfo.selectA == hexagonIndex) {
                 this.playerInfo.selectA = this.playerInfo.selectB
@@ -152,13 +189,13 @@ export default class MapScene extends Phaser.Scene {
                 this.playerInfo.selectB = null
                 this.playerInfo.selectGroundB = null
                 this.removeFromSelected(hexagonIndex)
-            } else if (!this.playerInfo.selectA
+            } else if (emptyA
                 && (this.sameGround(this.playerInfo.groundA, hexagon.ground)
                     || this.sameGround(this.playerInfo.groundB, hexagon.ground))) {
                 this.playerInfo.selectA = hexagonIndex
                 this.playerInfo.selectGroundA = hexagon.ground
                 this.addToSelected(hexagonIndex)
-            } else if (!this.playerInfo.selectB
+            } else if (emptyB
                 && (
                     (this.sameGround(this.playerInfo.groundA, hexagon.ground) && this.sameGround(this.playerInfo.groundB, this.playerInfo.selectGroundA))
                     ||
@@ -199,22 +236,95 @@ export default class MapScene extends Phaser.Scene {
 
     private makeRoad() {
 
-        if (!this.playerInfo.turnComplete && this.playerInfo.selectA && this.playerInfo.selectB) {
+        const emptyA = this.playerInfo.selectA === null || this.playerInfo.selectA === undefined
+        const emptyB = this.playerInfo.selectB === null || this.playerInfo.selectB === undefined
 
-            const pointA = this.hexagonCenter(this.hexagons.get(this.playerInfo.selectA))
-            const pointB = this.hexagonCenter(this.hexagons.get(this.playerInfo.selectB))
+        if ((!this.playerInfo.turnComplete || this.playerInfo.bonusRoad > 0) && !emptyA && !emptyB) {
+
+            const hexA = this.hexagons.get(this.playerInfo.selectA)
+            const hexB = this.hexagons.get(this.playerInfo.selectB)
+
+            const pointA = this.hexagonCenter(hexA)
+            const pointB = this.hexagonCenter(hexB)
 
             this.add.line(0, 0, pointA.x, pointA.y, pointB.x, pointB.y, 0xff0000).setOrigin(0, 0)
                 .setLineWidth(3, 3)
 
-            this.roads.set(this.playerInfo.selectA, this.playerInfo.selectB)
+            this.addToRoads(this.playerInfo.selectA, this.playerInfo.selectB)
+            this.addToRoads(this.playerInfo.selectB, this.playerInfo.selectA)
             this.clearSelected()
 
             //----
-            this.playerInfo.turnComplete = true
+            if (!this.playerInfo.turnComplete) {
+                this.playerInfo.turnComplete = true
+            } else {
+                this.playerInfo.bonusRoad -= 1
+            }
+
+            this.recalcRoadNet()
+
+            //---
             MapScene.emitter.emit(EventsEnum.MAKE_ROAD_AFTER)
         }
 
+    }
+
+    private addToRoads(a: number, b: number) {
+        if (!this.roads.has(a)) {
+            this.roads.set(a, new Set())
+        }
+        if (!this.roads.has(b)) {
+            this.roads.set(b, new Set())
+        }
+
+        this.roads.get(a).add(b)
+        this.roads.get(b).add(a)
+    }
+
+    private recalcRoadNet() {
+
+        this.roadNets.forEach((h: Hexagon, k) => {
+            if (k == h.net) {
+                // эта часть сети ещё ни к кому не присоеденена
+                // можно запускать поиск
+
+                const queue = []
+
+                const visited = new Set<number>()
+                queue.push(h)
+                visited.add(h.index)
+
+                while (queue.length > 0) {
+                    let currHex = queue.pop()
+
+                    this.roads.get(currHex.index)?.forEach((conIndex) => {
+                            const conHex = this.hexagons.get(conIndex)
+
+                            if (!conHex.net || conHex.net > currHex.net) {
+
+                                //регистрация коннекта артефакта
+                                if (conHex.artifact && !conHex.artifactConnected) {
+                                    const prev = this.artifactConnected.get(conHex.artifact) || 0
+                                    this.artifactConnected.set(conHex.artifact, prev + 1)
+                                    conHex.artifactConnected = true
+
+                                    if (this.artifactConnected.get(conHex.artifact) == this.mapConfig.roundCount) {
+                                        // выдать дополнительную дорогу
+                                        this.playerInfo.bonusRoad += 1
+                                    }
+                                }
+
+                                conHex.net = currHex.net
+                                queue.push(conHex)
+                            } else if (conHex.net === currHex.net && !visited.has(conIndex)) {
+                                visited.add(conIndex)
+                                queue.push(conHex)
+                            }
+                        }
+                    )
+                }
+            }
+        })
     }
 
     private startTurn() {
@@ -279,7 +389,8 @@ export default class MapScene extends Phaser.Scene {
             return res
         } else {
             return {
-                island: IslandEnum.PETIT
+                island: IslandEnum.PETIT,
+                roundCount: 2
             }
         }
     }

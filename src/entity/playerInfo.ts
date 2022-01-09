@@ -8,17 +8,17 @@ export interface PlayerInfo {
 
     turnComplete: boolean
 
-    groundA: GroundsEnum
+    groundA?: GroundsEnum
 
-    groundB: GroundsEnum
+    groundB?: GroundsEnum
 
-    selectA: number
+    selectA?: number
 
-    selectGroundA: GroundsEnum
+    selectGroundA?: GroundsEnum
 
-    selectGroundB: GroundsEnum
+    selectGroundB?: GroundsEnum
 
-    selectB: number
+    selectB?: number
 
     bonusRoad: number
 

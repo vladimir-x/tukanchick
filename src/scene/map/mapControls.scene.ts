@@ -59,7 +59,7 @@ export default class MapControlsScene extends Phaser.Scene {
             () => MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
         ).setDisplaySize(150, 50).textGO.setFontSize(20).setColor("green")
 
-        this.roadCount.create(260, 120, "ROADS").setDisplaySize(40, 50)
+        this.roadCount.create(260, 120, "ROADS").setDisplaySize(150, 50)
             .textGO.setFontSize(50).setColor("red")
 
         this.makeRoadButton.create(450, 120, "END-TURN",
@@ -85,10 +85,10 @@ export default class MapControlsScene extends Phaser.Scene {
     }
 
     private updateRoadCounter() {
-        const roadsForCurrentTurnCount = (this.playerInfo.turnComplete ? 0 : 1) + this.playerInfo.bonusRoad
-        this.roadCount.textGO.text = roadsForCurrentTurnCount.toString()
+        const oneRoad = (this.playerInfo.turnComplete ? 0 : 1)
+        this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
 
-        if (roadsForCurrentTurnCount === 0) {
+        if ((oneRoad + this.playerInfo.bonusRoad) === 0) {
             console.log("autostart next turn")
             MapScene.emitter.emit(EventsEnum.START_TURN)
         }

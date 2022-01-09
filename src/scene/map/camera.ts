@@ -17,13 +17,15 @@ export function configCamera(scene: Phaser.Scene, maxWidth: number, maxHeight: n
 
     scene.input.on("pointerdown", (pointer: any) => {
 
-        dragging = true
+        if (pointer.middleButtonDown()) {
+            dragging = true
 
-        downX = pointer.x
-        downY = pointer.y
+            downX = pointer.x
+            downY = pointer.y
 
-        beforeX = camera.scrollX
-        beforeY = camera.scrollY
+            beforeX = camera.scrollX
+            beforeY = camera.scrollY
+        }
 
     })
     scene.input.on("pointermove", (pointer: any) => {
