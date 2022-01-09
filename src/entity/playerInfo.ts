@@ -6,6 +6,8 @@ export interface PlayerInfo {
 
     turn: number
 
+    round: number
+
     turnComplete: boolean
 
     groundA?: GroundsEnum

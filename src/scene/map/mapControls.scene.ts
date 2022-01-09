@@ -15,9 +15,11 @@ export default class MapControlsScene extends Phaser.Scene {
     groundA: Image
     groundB: Image
 
+    roundLabel: Button
     makeRoadButton: Button
     nextTurnButtonButton: Button
 
+    roundCount: Button
     roadCount: Button
     turnCount: Button
 
@@ -27,9 +29,11 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundA = new Image(this)
         this.groundB = new Image(this)
 
+        this.roundLabel = new Button(this)
         this.makeRoadButton = new Button(this)
         this.nextTurnButtonButton = new Button(this)
 
+        this.roundCount = new Button(this)
         this.roadCount = new Button(this)
         this.turnCount = new Button(this)
 
@@ -40,8 +44,11 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundA.preload(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
         this.groundB.preload(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
 
+        this.roundLabel.preload(Assets.SAND_1)
         this.makeRoadButton.preload(Assets.SAND_1)
         this.nextTurnButtonButton.preload(Assets.SAND_1)
+
+        this.roundCount.preload(Assets.SAND_1)
         this.roadCount.preload(Assets.SAND_1)
         this.turnCount.preload(Assets.SAND_1)
 
@@ -50,48 +57,68 @@ export default class MapControlsScene extends Phaser.Scene {
 
     create() {
 
-        // const {width, height} = this.scale
-        this.groundA.create(300, 0).setDisplaySize(200, 234).imageGO.setScale(0.5, 0.5)
-        this.groundB.create(420, 0).setDisplaySize(200, 234).imageGO.setScale(0.5, 0.5)
+        this.roundLabel.create(0, 0, "ROUND").setDisplaySize(100, 50).textGO.setFontSize(20).setColor("black")
+        this.roundCount.create(100, 0, "ROUND_COUNT").setDisplaySize(100, 50)
+            .textGO.setFontSize(40).setColor("black")
 
 
-        this.makeRoadButton.create(100, 120, "MAKE-ROAD",
-            () => MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
-        ).setDisplaySize(150, 50).textGO.setFontSize(20).setColor("green")
-
-        this.roadCount.create(260, 120, "ROADS").setDisplaySize(150, 50)
-            .textGO.setFontSize(50).setColor("red")
-
-        this.makeRoadButton.create(450, 120, "END-TURN",
+        this.nextTurnButtonButton.create(0, 50, "END-TURN",
             () => MapScene.emitter.emit(EventsEnum.START_TURN)
-        ).setDisplaySize(150, 50).textGO.setFontSize(20).setColor("red")
+        ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("red")
 
-        this.turnCount.create(610, 120, "TURN").setDisplaySize(40, 50)
-            .textGO.setFontSize(50).setColor("red")
+        this.turnCount.create(100, 50, "TURN").setDisplaySize(100, 50)
+            .textGO.setFontSize(40).setColor("red")
 
+
+        this.makeRoadButton.create(0, 100, "MAKE-ROAD",
+            () => MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
+        ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("green")
+
+        this.roadCount.create(100, 100, "ROADS").setDisplaySize(100, 50)
+            .textGO.setFontSize(40).setColor("red")
+
+
+        this.roundLabel.imageGO.alpha=0.5
+        this.roundCount.imageGO.alpha=0.5
+
+        this.nextTurnButtonButton.imageGO.alpha=0.5
+        this.turnCount.imageGO.alpha=0.5
+
+        this.makeRoadButton.imageGO.alpha=0.5
+        this.roadCount.imageGO.alpha=0.5
+
+
+        // const {width, height} = this.scale
+        this.groundA.create(500, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
+        this.groundB.create(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
+
+
+        MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.updateAfterTurnCounter, this)
         MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.updateAfterTurnCounter, this)
         MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.updateRoadCounter, this)
 
-        MapScene.emitter.emit(EventsEnum.START_TURN)
+        this.updateAfterTurnCounter();
     }
 
     private updateAfterTurnCounter() {
+
         this.turnCount.textGO.text = this.playerInfo.turn.toString()
 
         this.groundA.changeFrame(this.playerInfo.groundA)
         this.groundB.changeFrame(this.playerInfo.groundB)
 
+        this.updateRoundCount()
         this.updateRoadCounter()
+    }
+
+    private updateRoundCount(){
+        this.roundCount.textGO.text = this.playerInfo.round.toString()
+
     }
 
     private updateRoadCounter() {
         const oneRoad = (this.playerInfo.turnComplete ? 0 : 1)
         this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
-
-        if ((oneRoad + this.playerInfo.bonusRoad) === 0) {
-            console.log("autostart next turn")
-            MapScene.emitter.emit(EventsEnum.START_TURN)
-        }
     }
 
 

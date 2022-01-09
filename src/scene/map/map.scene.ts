@@ -48,6 +48,14 @@ export default class MapScene extends Phaser.Scene {
         super(ScenesEnum.MAP);
 
         MapScene.emitter.destroy()
+
+        /*
+        for (let e in EventsEnum) {
+            MapScene.emitter.on(e, (event: any) => {
+                console.log("EVENT >>>", e)
+            })
+        }*/
+
     }
 
     preload() {
@@ -131,9 +139,10 @@ export default class MapScene extends Phaser.Scene {
                                 this.onClick(h)
                             } else {
                                 this.hexB = h
+                                this.clearSelected()
                                 this.onClick(this.hexA)
                                 this.onClick(this.hexB)
-                                this.makeRoad()
+                                MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
                             }
                         }
                     })
@@ -145,17 +154,23 @@ export default class MapScene extends Phaser.Scene {
         this.playerInfo = this.initPlayer("PLAYER")
 
 
-        this.deck = new Deck()
-
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
-        MapScene.emitter.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
         MapScene.emitter.on(EventsEnum.START_TURN, this.startTurn, this)
+        MapScene.emitter.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
+        MapScene.emitter.on(EventsEnum.END_TURN, this.endTurn, this)
+
+        MapScene.emitter.on(EventsEnum.START_ROUND, this.startRound, this)
+        MapScene.emitter.on(EventsEnum.END_ROUND, this.endRound, this)
+
+        MapScene.emitter.on(EventsEnum.START_GAME, this.startGame, this)
+        MapScene.emitter.on(EventsEnum.END_GAME, this.endGame, this)
 
         //----
         configCamera(this, map.width, map.height)
 
         //----
+        MapScene.emitter.emit(EventsEnum.START_GAME)
     }
 
     update(time: number, delta: number) {
@@ -165,7 +180,7 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            name: name, turn: 0, bonusRoad: 0, turnComplete: false
+            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false
         }
     }
 
@@ -224,7 +239,11 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private removeFromSelected(hexagonIndex: number) {
-        this.polygonGameObjects.get(hexagonIndex).isFilled = false
+        const pgo = this.polygonGameObjects.get(hexagonIndex)
+        if (pgo) {
+            pgo.isFilled = false
+        }
+        //this.polygonGameObjects.get(hexagonIndex).isFilled = false
     }
 
     private clearSelected() {
@@ -265,6 +284,11 @@ export default class MapScene extends Phaser.Scene {
 
             //---
             MapScene.emitter.emit(EventsEnum.MAKE_ROAD_AFTER)
+
+            //---
+            if (this.playerInfo.bonusRoad == 0) {
+                MapScene.emitter.emit(EventsEnum.END_TURN)
+            }
         }
 
     }
@@ -332,18 +356,51 @@ export default class MapScene extends Phaser.Scene {
         this.playerInfo.groundA = this.deck.pop()
         this.playerInfo.groundB = this.deck.pop()
 
-        if (this.playerInfo.groundA && this.playerInfo.groundB) {
+        this.playerInfo.turn++
+        this.playerInfo.turnComplete = false
 
-            this.playerInfo.turn++
-            this.playerInfo.turnComplete = false
+        MapScene.emitter.emit(EventsEnum.START_TURN_AFTER)
+    }
 
-
-            MapScene.emitter.emit(EventsEnum.START_TURN_AFTER)
-
+    private endTurn() {
+        if (this.deck.size() > 1) {
+            MapScene.emitter.emit(EventsEnum.START_TURN)
         } else {
-            // ЗАКОНЧИЛСЯ РАУНД!!!
-            alert('END ROUND')
+            MapScene.emitter.emit(EventsEnum.END_ROUND)
         }
+
+    }
+
+    private endRound() {
+        alert('END ROUND !!!')
+
+        // TODO: подсчёт очков
+
+
+        if (this.playerInfo.round < this.mapConfig.roundCount) {
+            MapScene.emitter.emit(EventsEnum.START_ROUND)
+        } else {
+            MapScene.emitter.emit(EventsEnum.END_GAME)
+
+        }
+    }
+
+    private startRound() {
+        this.deck = new Deck()
+        this.playerInfo.round += 1
+        this.playerInfo.turn = 0
+
+        MapScene.emitter.emit(EventsEnum.START_ROUND_AFTER)
+        MapScene.emitter.emit(EventsEnum.START_TURN)
+    }
+
+
+    private startGame() {
+        MapScene.emitter.emit(EventsEnum.START_ROUND)
+    }
+
+    private endGame() {
+        alert('END GAME !!!')
     }
 
     private hexagonCenter(hexagon: Hexagon): Vector2Like {
