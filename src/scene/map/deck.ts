@@ -24,6 +24,12 @@ export default class Deck {
         for (let i = 0; i < 2; ++i) {
             this.items.push(GroundsEnum.JOKER)
         }
+
+/*
+        for (let i = 0; i < 20; ++i) {
+            this.items.push(GroundsEnum.JOKER)
+        }
+        */
         this.shuffleArray(this.items)
     }
 

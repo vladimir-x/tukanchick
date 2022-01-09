@@ -9,8 +9,10 @@ import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
 import Deck from "./deck";
 import {GroundsEnum} from "../../enums/grounds.enum";
-import Vector2Like = Phaser.Types.Math.Vector2Like;
 import {ArtifactsEnum} from "../../enums/artifacts.enum";
+import Vector2Like = Phaser.Types.Math.Vector2Like;
+import Graphics = Phaser.GameObjects.Graphics;
+import {ArtifactMapZone} from "../../entity/artifactMapZone";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -20,6 +22,10 @@ export default class MapScene extends Phaser.Scene {
     mapConfig: MapConfig
 
     hexagons: Map<number, Hexagon>
+
+    graphics: Graphics
+
+    artifactMapZones: Map<ArtifactsEnum, ArtifactMapZone>
 
     polygonGeoms: Map<number, Phaser.Geom.Polygon>
 
@@ -42,7 +48,6 @@ export default class MapScene extends Phaser.Scene {
 
     artifactConnected: Map<ArtifactsEnum, number>
 
-    additionRoadProvided: Set<ArtifactsEnum>
 
     constructor() {
         super(ScenesEnum.MAP);
@@ -64,15 +69,18 @@ export default class MapScene extends Phaser.Scene {
 
         this.textures.remove("map")
         this.cache.json.remove("hexagons")
+        this.cache.json.remove("mapzones")
 
         switch (this.mapConfig.island) {
             case IslandEnum.PETIT:
                 this.load.image("map", Assets.MAP_ISLAND_PETIT);
                 this.load.json("hexagons", Assets.HEXAGONS_ISLAND_PETIT)
+                this.load.json("mapzones", Assets.MAPZONES_ISLAND_PETIT)
                 break;
             case IslandEnum.GRANDE:
                 this.load.image("map", Assets.MAP_ISLAND_GRANDE);
                 this.load.json("hexagons", Assets.HEXAGONS_ISLAND_GRANDE)
+                this.load.json("mapzones", Assets.MAPZONES_ISLAND_GRANDE)
                 break;
 
         }
@@ -90,14 +98,15 @@ export default class MapScene extends Phaser.Scene {
 
         this.artifactConnected = new Map()
 
-        this.additionRoadProvided = new Set()
-
-
         const arrayHexagons: Hexagon[] = this.cache.json.get("hexagons")
-        arrayHexagons.forEach((h) => {
-            this.hexagons.set(h.index, h)
-        })
+        arrayHexagons.forEach((h) => this.hexagons.set(h.index, h))
 
+        this.artifactMapZones = new Map()
+
+        const arrayArtifactMapZones: ArtifactMapZone[] = this.cache.json.get("mapzones").artifacts
+        arrayArtifactMapZones.forEach((z) => this.artifactMapZones.set(z.artifact, z))
+
+        this.graphics = this.add.graphics();
 
         this.polygonGeoms = new Map()
 
@@ -105,7 +114,7 @@ export default class MapScene extends Phaser.Scene {
 
         this.hexagons.forEach((h) => {
 
-                if (h.artifact?.startsWith("TOWN_")) {
+                if (this.isTown(h.artifact)) {
                     h.net = Number(h.artifact.substring(5))
                     this.roadNets.set(h.net, h)
                 }
@@ -119,7 +128,7 @@ export default class MapScene extends Phaser.Scene {
                 this.polygonGeoms.set(h.index, polygonGeom)
                 this.polygonGameObjects.set(h.index, polygonGameObject)
 
-                this.drawHexagons(h)
+                //this.drawHexagons(h)
 
                 polygonGameObject
                     .setInteractive(polygonGeom,
@@ -180,7 +189,7 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false
+            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, roundScore: []
         }
     }
 
@@ -231,7 +240,7 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private sameGround(a: GroundsEnum, b: GroundsEnum): boolean {
-        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER
+        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER || this.playerInfo.bonusRoad > 0
     }
 
     private addToSelected(hexagonIndex: number) {
@@ -327,16 +336,7 @@ export default class MapScene extends Phaser.Scene {
                             if (!conHex.net || conHex.net > currHex.net) {
 
                                 //регистрация коннекта артефакта
-                                if (conHex.artifact && !conHex.artifactConnected) {
-                                    const prev = this.artifactConnected.get(conHex.artifact) || 0
-                                    this.artifactConnected.set(conHex.artifact, prev + 1)
-                                    conHex.artifactConnected = true
-
-                                    if (this.artifactConnected.get(conHex.artifact) == this.mapConfig.roundCount) {
-                                        // выдать дополнительную дорогу
-                                        this.playerInfo.bonusRoad += 1
-                                    }
-                                }
+                                this.checkNewArtifact(conHex)
 
                                 conHex.net = currHex.net
                                 queue.push(conHex)
@@ -349,6 +349,36 @@ export default class MapScene extends Phaser.Scene {
                 }
             }
         })
+    }
+
+    private checkNewArtifact(hex: Hexagon) {
+        if (hex.artifact && !hex.artifactConnected && this.isObject(hex.artifact)) {
+            const prev = this.artifactConnected.get(hex.artifact) || 0
+            this.artifactConnected.set(hex.artifact, prev + 1)
+            hex.artifactConnected = true
+
+            this.drawArtifactFound(hex.artifact)
+
+            if (this.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
+                // выдать дополнительную дорогу
+                this.playerInfo.bonusRoad += 1
+            }
+        }
+    }
+
+    private drawArtifactFound(artifact: ArtifactsEnum) {
+
+        this.graphics.lineStyle(4, 0x00ff00, 1);
+
+        const conCount = this.artifactConnected.get(artifact)
+        const points = this.artifactMapZones.get(artifact)?.points
+
+        if (conCount > 0 && points && points.length > 0) {
+            for (let i = 0; i < conCount; ++i) {
+                this.graphics.strokeCircle(points[i].x, points[i].y, 45);
+            }
+        }
+
     }
 
     private startTurn() {
@@ -372,9 +402,10 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private endRound() {
-        alert('END ROUND !!!')
 
-        // TODO: подсчёт очков
+        this.calculateRoundScore()
+
+        alert('END ROUND !!!')
 
 
         if (this.playerInfo.round < this.mapConfig.roundCount) {
@@ -383,6 +414,26 @@ export default class MapScene extends Phaser.Scene {
             MapScene.emitter.emit(EventsEnum.END_GAME)
 
         }
+    }
+
+    private calculateRoundScore() {
+
+        let currentScore = 0
+
+        //артефакты
+        this.artifactConnected.forEach((count, artifact) => {
+
+            if (this.isObject(artifact)) {
+
+                const scores = this.artifactMapZones.get(artifact).score
+                for (let i = 0; i < count; ++i) {
+                    currentScore += scores[i]
+                }
+            }
+        })
+
+        this.playerInfo.roundScore[this.playerInfo.round] = currentScore
+
     }
 
     private startRound() {
@@ -438,6 +489,13 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
+    private isTown(artifact: ArtifactsEnum){
+        return artifact?.startsWith("TOWN_")
+    }
+
+    private isObject(artifact: ArtifactsEnum){
+        return !this.isTown(artifact)
+    }
 
     private getConfigOrDefault(): MapConfig {
 
