@@ -16,6 +16,7 @@ import {ArtifactMapZone} from "../../entity/artifactMapZone";
 import {MapInfo} from "../../entity/mapInfo";
 import {Button} from "../../controls/button";
 import {ScoreZonesEnum} from "../../enums/scoreZones.enum";
+import TownSpawner from "./townSpawner";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -122,10 +123,13 @@ export default class MapScene extends Phaser.Scene {
 
         this.polygonGameObjects = new Map()
 
-        this.hexagons.forEach((h) => {
+        const townSpawner = new TownSpawner()
+
+        this.hexagons.forEach((h: Hexagon, key: number) => {
 
                 if (this.isTown(h.artifact)) {
                     h.net = Number(h.artifact.substring(5))
+                    h.townLetter = townSpawner.pop()
                     this.roadNets.set(h.net, h)
                 }
 
@@ -139,6 +143,8 @@ export default class MapScene extends Phaser.Scene {
                 this.polygonGameObjects.set(h.index, polygonGameObject)
 
                 //this.drawHexagons(h)
+
+                this.drawTownLetter(h)
 
                 polygonGameObject
                     .setInteractive(polygonGeom,
@@ -426,31 +432,6 @@ export default class MapScene extends Phaser.Scene {
 
         this.drawScore()
 
-   /*
-        if (this.playerInfo.roundScore[0]) {
-            this.round0Score.setText(this.playerInfo.roundScore[0].toString())
-        }
-        if (this.playerInfo.roundScore[1]) {
-            this.round1Score.setText(this.playerInfo.roundScore[1].toString())
-        }
-        if (this.playerInfo.roundScore[2]) {
-            this.round2Score.setText(this.playerInfo.roundScore[2].toString())
-        }
-
-        if (this.playerInfo.townScore) {
-            this.townScore.setText(this.playerInfo.townScore.toString())
-        }
-        if (this.playerInfo.townScore) {
-            this.townScore.setText(this.playerInfo.townScore.toString())
-        }
-        if (this.playerInfo.bonusScore) {
-            this.bonusScore.setText(this.playerInfo.bonusScore.toString())
-        }
-        if (this.playerInfo.totalScore) {
-            this.totalScore.setText(this.playerInfo.totalScore.toString())
-        }*/
-
-
         alert('END ROUND !!!')
 
         MapScene.emitter.emit(EventsEnum.END_ROUND_AFTER)
@@ -464,7 +445,7 @@ export default class MapScene extends Phaser.Scene {
         }
     }
 
-    private drawScore(){
+    private drawScore() {
 
         for (const z in ScoreZonesEnum) {
             if (this.playerInfo.scores[z]) {
@@ -489,7 +470,7 @@ export default class MapScene extends Phaser.Scene {
             }
         })
 
-        this.playerInfo.scores[this.playerInfo.round-1] = currentScore
+        this.playerInfo.scores[this.playerInfo.round - 1] = currentScore
     }
 
     private calculateTotalScore() {
@@ -537,6 +518,21 @@ export default class MapScene extends Phaser.Scene {
         }
     }
 
+
+    private drawTownLetter(hexagon: Hexagon) {
+        if (hexagon.townLetter) {
+
+            const x = hexagon.points[5].x + (hexagon.points[1].x - hexagon.points[5].x)/3
+            const y = hexagon.points[0].y + (hexagon.points[2].y - hexagon.points[0].y)/3
+
+            this.add.text(x, y, hexagon.townLetter)
+                .setOrigin(0, 0)
+                .setColor("#000000")
+                .setFontStyle("bold")
+                .setFontSize(100)
+        }
+    }
+
     private drawHexagons(hexagon: Hexagon) {
         for (let i = 0; i < hexagon.points.length; ++i) {
             let a = hexagon.points[i];
@@ -565,11 +561,11 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
-    private isTown(artifact: ArtifactsEnum){
+    private isTown(artifact: ArtifactsEnum) {
         return artifact?.startsWith("TOWN_")
     }
 
-    private isObject(artifact: ArtifactsEnum){
+    private isObject(artifact: ArtifactsEnum) {
         return !this.isTown(artifact)
     }
 

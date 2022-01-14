@@ -1,4 +1,5 @@
 import {GroundsEnum} from "../../enums/grounds.enum";
+import {shuffleArray} from "./map.util";
 
 
 export default class Deck {
@@ -30,7 +31,7 @@ export default class Deck {
             this.items.push(GroundsEnum.JOKER)
         }*/
 
-        this.shuffleArray(this.items)
+        shuffleArray(this.items)
     }
 
 
@@ -42,10 +43,4 @@ export default class Deck {
         return this.items.length
     }
 
-    private shuffleArray(array: any[]) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
 }

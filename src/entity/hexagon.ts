@@ -18,4 +18,6 @@ export interface Hexagon {
 
     artifactConnected?: boolean
 
+    townLetter?: string
+
 }
