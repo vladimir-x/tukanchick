@@ -8,8 +8,8 @@ const config = {
     type: Phaser.AUTO,
     parent: 'main-screen',
     fullscreenTarget: 'main-screen',
-  //  scene: [MainMenuScene, MapScene, MapControlsScene],
-    scene: [MapScene , MainMenuScene, MapControlsScene ],
+    scene: [MainMenuScene, MapScene, MapControlsScene],
+   // scene: [MapScene , MainMenuScene, MapControlsScene ],
     scale: {
         autoCenter: Center.NO_CENTER,
         mode: Phaser.Scale.RESIZE,

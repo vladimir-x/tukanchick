@@ -24,5 +24,5 @@ export interface PlayerInfo {
 
     bonusRoad: number
 
-    roundScore: number[]
+    scores: number[]
 }

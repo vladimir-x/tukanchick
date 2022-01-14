@@ -12,12 +12,8 @@ export enum Assets {
 
     MAP_ISLAND_GRANDE = "assets/isla-grande.jpeg",
 
-    HEXAGONS_ISLAND_PETIT = "assets/isla-petit.hexagons.json",
+    MAPINFO_ISLAND_PETIT = "assets/isla-petit.info.json",
 
-    HEXAGONS_ISLAND_GRANDE = "assets/isla-grande.hexagons.json",
-
-    MAPZONES_ISLAND_PETIT = "assets/isla-petit.zones.json",
-
-    MAPZONES_ISLAND_GRANDE = "assets/isla-grante.zones.json",
+    MAPINFO_ISLAND_GRANDE = "assets/isla-grante.info.json",
 
 }

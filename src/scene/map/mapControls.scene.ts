@@ -23,6 +23,7 @@ export default class MapControlsScene extends Phaser.Scene {
     roadCount: Button
     turnCount: Button
 
+
     constructor() {
         super(ScenesEnum.MAP_CONTROLS)
 
@@ -37,6 +38,7 @@ export default class MapControlsScene extends Phaser.Scene {
         this.roadCount = new Button(this)
         this.turnCount = new Button(this)
 
+
     }
 
     preload() {
@@ -50,6 +52,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
         this.roundCount.preload(Assets.SAND_1)
         this.roadCount.preload(Assets.SAND_1)
+        this.turnCount.preload(Assets.SAND_1)
+
         this.turnCount.preload(Assets.SAND_1)
 
         this.playerInfo = this.scene.settings.data as PlayerInfo
@@ -94,6 +98,7 @@ export default class MapControlsScene extends Phaser.Scene {
 
 
         MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.updateAfterTurnCounter, this)
+      //  MapScene.emitter.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
         MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.updateAfterTurnCounter, this)
         MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.updateRoadCounter, this)
 
@@ -109,6 +114,9 @@ export default class MapControlsScene extends Phaser.Scene {
 
         this.updateRoundCount()
         this.updateRoadCounter()
+
+
+        //this.updateScore()
     }
 
     private updateRoundCount(){
@@ -121,5 +129,18 @@ export default class MapControlsScene extends Phaser.Scene {
         this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
     }
 
+   /* private updateScore() {
+
+        if (this.playerInfo.roundScore[0] > 0) {
+
+        }
+        if (this.playerInfo.roundScore[1] > 0) {
+
+        }
+        if (this.playerInfo.roundScore[2] > 0) {
+
+        }
+    }
+*/
 
 }

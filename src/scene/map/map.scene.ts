@@ -13,6 +13,9 @@ import {ArtifactsEnum} from "../../enums/artifacts.enum";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
 import Graphics = Phaser.GameObjects.Graphics;
 import {ArtifactMapZone} from "../../entity/artifactMapZone";
+import {MapInfo} from "../../entity/mapInfo";
+import {Button} from "../../controls/button";
+import {ScoreZonesEnum} from "../../enums/scoreZones.enum";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -49,10 +52,19 @@ export default class MapScene extends Phaser.Scene {
     artifactConnected: Map<ArtifactsEnum, number>
 
 
+    //очки
+    scoreZones: Button[]
+
+
     constructor() {
         super(ScenesEnum.MAP);
 
         MapScene.emitter.destroy()
+
+        this.scoreZones = []
+        for (const z in ScoreZonesEnum) {
+            this.scoreZones[z] = new Button(this)
+        }
 
         /*
         for (let e in EventsEnum) {
@@ -74,13 +86,11 @@ export default class MapScene extends Phaser.Scene {
         switch (this.mapConfig.island) {
             case IslandEnum.PETIT:
                 this.load.image("map", Assets.MAP_ISLAND_PETIT);
-                this.load.json("hexagons", Assets.HEXAGONS_ISLAND_PETIT)
-                this.load.json("mapzones", Assets.MAPZONES_ISLAND_PETIT)
+                this.load.json("info", Assets.MAPINFO_ISLAND_PETIT)
                 break;
             case IslandEnum.GRANDE:
                 this.load.image("map", Assets.MAP_ISLAND_GRANDE);
-                this.load.json("hexagons", Assets.HEXAGONS_ISLAND_GRANDE)
-                this.load.json("mapzones", Assets.MAPZONES_ISLAND_GRANDE)
+                this.load.json("info", Assets.MAPINFO_ISLAND_GRANDE)
                 break;
 
         }
@@ -98,13 +108,13 @@ export default class MapScene extends Phaser.Scene {
 
         this.artifactConnected = new Map()
 
-        const arrayHexagons: Hexagon[] = this.cache.json.get("hexagons")
-        arrayHexagons.forEach((h) => this.hexagons.set(h.index, h))
+        const mapInfo: MapInfo = this.cache.json.get("info")
+
+        mapInfo.hexagons.forEach((h) => this.hexagons.set(h.index, h))
 
         this.artifactMapZones = new Map()
 
-        const arrayArtifactMapZones: ArtifactMapZone[] = this.cache.json.get("mapzones").artifacts
-        arrayArtifactMapZones.forEach((z) => this.artifactMapZones.set(z.artifact, z))
+        mapInfo.artifacts.forEach((z) => this.artifactMapZones.set(z.artifact, z))
 
         this.graphics = this.add.graphics();
 
@@ -160,6 +170,15 @@ export default class MapScene extends Phaser.Scene {
 
         //----
 
+        for (const z in ScoreZonesEnum) {
+            if (mapInfo.scores[z]?.x) {
+                this.scoreZones[z].create(mapInfo.scores[z].x, mapInfo.scores[z].y, "___").setTextFont(80, "black")
+            }
+        }
+
+
+        //----
+
         this.playerInfo = this.initPlayer("PLAYER")
 
 
@@ -189,7 +208,7 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, roundScore: []
+            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
         }
     }
 
@@ -405,14 +424,52 @@ export default class MapScene extends Phaser.Scene {
 
         this.calculateRoundScore()
 
+        this.drawScore()
+
+   /*
+        if (this.playerInfo.roundScore[0]) {
+            this.round0Score.setText(this.playerInfo.roundScore[0].toString())
+        }
+        if (this.playerInfo.roundScore[1]) {
+            this.round1Score.setText(this.playerInfo.roundScore[1].toString())
+        }
+        if (this.playerInfo.roundScore[2]) {
+            this.round2Score.setText(this.playerInfo.roundScore[2].toString())
+        }
+
+        if (this.playerInfo.townScore) {
+            this.townScore.setText(this.playerInfo.townScore.toString())
+        }
+        if (this.playerInfo.townScore) {
+            this.townScore.setText(this.playerInfo.townScore.toString())
+        }
+        if (this.playerInfo.bonusScore) {
+            this.bonusScore.setText(this.playerInfo.bonusScore.toString())
+        }
+        if (this.playerInfo.totalScore) {
+            this.totalScore.setText(this.playerInfo.totalScore.toString())
+        }*/
+
+
         alert('END ROUND !!!')
 
+        MapScene.emitter.emit(EventsEnum.END_ROUND_AFTER)
 
         if (this.playerInfo.round < this.mapConfig.roundCount) {
             MapScene.emitter.emit(EventsEnum.START_ROUND)
         } else {
-            MapScene.emitter.emit(EventsEnum.END_GAME)
 
+
+            MapScene.emitter.emit(EventsEnum.END_GAME)
+        }
+    }
+
+    private drawScore(){
+
+        for (const z in ScoreZonesEnum) {
+            if (this.playerInfo.scores[z]) {
+                this.scoreZones[z].setText(this.playerInfo.scores[z].toString())
+            }
         }
     }
 
@@ -432,8 +489,23 @@ export default class MapScene extends Phaser.Scene {
             }
         })
 
-        this.playerInfo.roundScore[this.playerInfo.round] = currentScore
+        this.playerInfo.scores[this.playerInfo.round-1] = currentScore
+    }
 
+    private calculateTotalScore() {
+
+        // todo: calc town
+        // todo: calc bonus
+
+        let total = 0
+
+        for (let i = 0; i < ScoreZonesEnum.TOTAL; ++i) {
+            if (this.playerInfo.scores[i]) {
+                total += this.playerInfo.scores[i]
+            }
+        }
+
+        this.playerInfo.scores[ScoreZonesEnum.TOTAL] = total
     }
 
     private startRound() {
@@ -451,6 +523,10 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private endGame() {
+
+        this.calculateTotalScore()
+        this.drawScore()
+
         alert('END GAME !!!')
     }
 

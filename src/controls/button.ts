@@ -36,4 +36,15 @@ export class Button {
         return this
     }
 
+    setTextFont(size: number, color: string){
+        this.textGO.setFontSize(size)
+        this.textGO.setColor(color)
+        return this
+    }
+
+    setText(text: string){
+        this.textGO.setText(text)
+        return this
+    }
+
 }
