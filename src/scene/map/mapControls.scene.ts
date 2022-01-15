@@ -97,15 +97,15 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundB.create(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
 
 
-        MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.updateAfterTurnCounter, this)
-      //  MapScene.emitter.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
-        MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.updateAfterTurnCounter, this)
-        MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.updateRoadCounter, this)
+        MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.onStartTurn, this)
+       // MapScene.emitter.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
+        MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
+        MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
 
-        this.updateAfterTurnCounter();
+        this.onStartTurn();
     }
 
-    private updateAfterTurnCounter() {
+    private onStartTurn() {
 
         this.turnCount.textGO.text = this.playerInfo.turn.toString()
 
@@ -115,9 +115,16 @@ export default class MapControlsScene extends Phaser.Scene {
         this.updateRoundCount()
         this.updateRoadCounter()
 
-
         //this.updateScore()
     }
+
+    private onMakeRoad() {
+        this.updateRoadCounter()
+
+        this.groundA.imageGO.setAlpha(0.5)
+        this.groundB.imageGO.setAlpha(0.5)
+    }
+
 
     private updateRoundCount(){
         this.roundCount.textGO.text = this.playerInfo.round.toString()

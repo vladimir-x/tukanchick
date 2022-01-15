@@ -27,7 +27,7 @@ export class Image {
     }
 
     changeFrame(frameName: string) {
-        this.imageGO.setFrame(frameName)
+        this.imageGO.setFrame(frameName).setAlpha(1)
         return this
     }
 

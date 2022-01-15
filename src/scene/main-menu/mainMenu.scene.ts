@@ -49,6 +49,7 @@ export default class MainMenuScene extends Phaser.Scene {
             () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig)
         ).setDisplaySize(buttonWidth, buttonHeight).textGO.setFontSize(20).setColor("red")
 
+        this.add.text(0, 0, "ver" + "0.0.1").setOrigin(0)
     }
 
     update() {

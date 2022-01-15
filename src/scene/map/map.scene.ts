@@ -63,7 +63,6 @@ export default class MapScene extends Phaser.Scene {
 
     townZones: Map<TownLetters, TownMapZone>
 
-
     constructor() {
         super(ScenesEnum.MAP);
 
@@ -74,12 +73,12 @@ export default class MapScene extends Phaser.Scene {
             this.scoreZones[z] = new Button(this)
         }
 
-        /*
+
         for (let e in EventsEnum) {
             MapScene.emitter.on(e, (event: any) => {
                 console.log("EVENT >>>", e)
             })
-        }*/
+        }
 
     }
 
@@ -218,6 +217,11 @@ export default class MapScene extends Phaser.Scene {
 
         MapScene.emitter.on(EventsEnum.START_GAME, this.startGame, this)
         MapScene.emitter.on(EventsEnum.END_GAME, this.endGame, this)
+
+
+        MapScene.emitter.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
+        MapScene.emitter.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
+        MapScene.emitter.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
 
         //----
         configCamera(this, map.width, map.height)
@@ -402,13 +406,21 @@ export default class MapScene extends Phaser.Scene {
             this.artifactConnected.set(hex.artifact, prev + 1)
             hex.artifactConnected = true
 
-            this.drawArtifactFound(hex.artifact)
-
-            if (this.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
-                // выдать дополнительную дорогу
-                this.playerInfo.bonusRoad += 1
-            }
+            MapScene.emitter.emit(EventsEnum.CONNECT_ARTIFACT, hex)
         }
+    }
+
+    private onConnectArtifact(hex: Hexagon) {
+
+        this.drawArtifactFound(hex.artifact)
+        if (this.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
+            // выдать дополнительную дорогу
+            MapScene.emitter.emit(EventsEnum.BONUS_ROAD)
+        }
+    }
+
+    private onBonusRoad() {
+        this.playerInfo.bonusRoad += 1
     }
 
     private drawArtifactFound(artifact: ArtifactsEnum) {
@@ -427,6 +439,10 @@ export default class MapScene extends Phaser.Scene {
     }
 
 
+    private onConnectTown(letter: TownLetters) {
+        this.drawTownConnected(letter)
+    }
+
     private checkTownConnection() {
 
         this.townByLetter.forEach((towns: Hexagon[], letter: TownLetters) => {
@@ -434,8 +450,7 @@ export default class MapScene extends Phaser.Scene {
                 if (towns[0].net && towns[0].net === towns[1].net) {
                     this.townLetterConnected.add(letter)
 
-
-                    this.drawTownConnected(letter)
+                    MapScene.emitter.emit(EventsEnum.CONNECT_TOWN, letter)
                 }
             }
         })
@@ -449,7 +464,6 @@ export default class MapScene extends Phaser.Scene {
         this.graphics.strokeCircle(point.x, point.y, 45);
 
         console.log("TownConnect", letter)
-
     }
 
     private startTurn() {
@@ -464,11 +478,13 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private endTurn() {
-        if (this.deck.size() > 1) {
-            MapScene.emitter.emit(EventsEnum.START_TURN)
-        } else {
-            MapScene.emitter.emit(EventsEnum.END_ROUND)
-        }
+        this.time.delayedCall(300, () => {
+            if (this.deck.size() > 1) {
+                MapScene.emitter.emit(EventsEnum.START_TURN)
+            } else {
+                MapScene.emitter.emit(EventsEnum.END_ROUND)
+            }
+        })
 
     }
 
