@@ -1,29 +1,24 @@
 import {shuffleArray} from "./map.util";
+import {TownLetters} from "../../enums/townLetters";
 
 export default class TownSpawner {
 
-    items: string[]
+    items: TownLetters[]
 
     constructor() {
 
         this.items = []
 
-        this.items.push('A')
-        this.items.push('A')
-        this.items.push('B')
-        this.items.push('B')
-        this.items.push('C')
-        this.items.push('C')
-        this.items.push('D')
-        this.items.push('D')
-        this.items.push('E')
-        this.items.push('E')
+        for (let letter in TownLetters) {
+            this.items.push(letter as TownLetters)
+            this.items.push(letter as TownLetters)
+        }
 
         shuffleArray(this.items)
     }
 
 
-    public pop(): string {
+    public pop(): TownLetters {
         return this.items.pop()
     }
 

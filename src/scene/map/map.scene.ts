@@ -17,6 +17,8 @@ import {MapInfo} from "../../entity/mapInfo";
 import {Button} from "../../controls/button";
 import {ScoreZonesEnum} from "../../enums/scoreZones.enum";
 import TownSpawner from "./townSpawner";
+import {TownLetters} from "../../enums/townLetters";
+import {TownMapZone} from "../../entity/townMapZone";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -52,9 +54,14 @@ export default class MapScene extends Phaser.Scene {
 
     artifactConnected: Map<ArtifactsEnum, number>
 
+    townByLetter: Map<TownLetters, Hexagon[]>
+    townLetterConnected: Set<TownLetters>
+
 
     //очки
     scoreZones: Button[]
+
+    townZones: Map<TownLetters, TownMapZone>
 
 
     constructor() {
@@ -125,12 +132,24 @@ export default class MapScene extends Phaser.Scene {
 
         const townSpawner = new TownSpawner()
 
+        this.townByLetter = new Map()
+        for (let letter in TownLetters) {
+            this.townByLetter.set(letter as TownLetters, [])
+        }
+
+        this.townLetterConnected = new Set()
+
+        this.townZones = new Map()
+        mapInfo.towns.forEach((z) => this.townZones.set(z.letter, z))
+
         this.hexagons.forEach((h: Hexagon, key: number) => {
 
                 if (this.isTown(h.artifact)) {
                     h.net = Number(h.artifact.substring(5))
                     h.townLetter = townSpawner.pop()
                     this.roadNets.set(h.net, h)
+
+                    this.townByLetter.get(h.townLetter).push(h)
                 }
 
                 let downX = 0
@@ -315,6 +334,7 @@ export default class MapScene extends Phaser.Scene {
             }
 
             this.recalcRoadNet()
+            this.checkTownConnection()
 
             //---
             MapScene.emitter.emit(EventsEnum.MAKE_ROAD_AFTER)
@@ -406,6 +426,32 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
+
+    private checkTownConnection() {
+
+        this.townByLetter.forEach((towns: Hexagon[], letter: TownLetters) => {
+            if (!this.townLetterConnected.has(letter)) {
+                if (towns[0].net && towns[0].net === towns[1].net) {
+                    this.townLetterConnected.add(letter)
+
+
+                    this.drawTownConnected(letter)
+                }
+            }
+        })
+    }
+
+    private drawTownConnected(letter: TownLetters) {
+
+        this.graphics.lineStyle(4, 0x00ff00, 1);
+
+        const point = this.townZones.get(letter).point
+        this.graphics.strokeCircle(point.x, point.y, 45);
+
+        console.log("TownConnect", letter)
+
+    }
+
     private startTurn() {
 
         this.playerInfo.groundA = this.deck.pop()
@@ -474,17 +520,22 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private calculateTotalScore() {
-
-        // todo: calc town
-        // todo: calc bonus
-
         let total = 0
 
-        for (let i = 0; i < ScoreZonesEnum.TOTAL; ++i) {
-            if (this.playerInfo.scores[i]) {
-                total += this.playerInfo.scores[i]
+        //calc town
+        this.townLetterConnected.forEach(letter => {
+                total += this.townZones.get(letter as TownLetters).score
             }
-        }
+        )
+        this.playerInfo.scores[ScoreZonesEnum.TOWN] = total
+
+        // todo: calc bonus
+
+        // calc round sum
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND0]
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND1]
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND2] || 0
+
 
         this.playerInfo.scores[ScoreZonesEnum.TOTAL] = total
     }
@@ -522,8 +573,8 @@ export default class MapScene extends Phaser.Scene {
     private drawTownLetter(hexagon: Hexagon) {
         if (hexagon.townLetter) {
 
-            const x = hexagon.points[5].x + (hexagon.points[1].x - hexagon.points[5].x)/3
-            const y = hexagon.points[0].y + (hexagon.points[2].y - hexagon.points[0].y)/3
+            const x = hexagon.points[5].x + (hexagon.points[1].x - hexagon.points[5].x) / 3
+            const y = hexagon.points[0].y + (hexagon.points[2].y - hexagon.points[0].y) / 3
 
             this.add.text(x, y, hexagon.townLetter)
                 .setOrigin(0, 0)

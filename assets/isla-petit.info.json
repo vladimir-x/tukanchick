@@ -1,4 +1,46 @@
 {
+  "towns": [
+    {
+      "letter": "A",
+      "point": {
+        "x": 2284,
+        "y": 1024
+      },
+      "score": 14
+    },
+    {
+      "letter": "B",
+      "point": {
+        "x": 2284,
+        "y": 1124
+      },
+      "score": 13
+    },
+    {
+      "letter": "C",
+      "point": {
+        "x": 2585,
+        "y": 924
+      },
+      "score": 12
+    },
+    {
+      "letter": "D",
+      "point": {
+        "x": 2585,
+        "y": 1024
+      },
+      "score": 11
+    },
+    {
+      "letter": "E",
+      "point": {
+        "x": 2585,
+        "y": 1124
+      },
+      "score": 10
+    }
+  ],
   "scores": [
     {
       "x": 2500,

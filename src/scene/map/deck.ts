@@ -27,10 +27,10 @@ export default class Deck {
         }
 
 /*
-        for (let i = 0; i < 10; ++i) {
+        for (let i = 0; i < 12; ++i) {
             this.items.push(GroundsEnum.JOKER)
-        }*/
-
+        }
+*/
         shuffleArray(this.items)
     }
 
