@@ -19,4 +19,7 @@ export enum EventsEnum {
     CONNECT_ARTIFACT = "CONNECT_ARTIFACT",
     CONNECT_TOWN = "CONNECT_TOWN",
     BONUS_ROAD = "BONUS_ROAD",
+
+
+    MESSAGE = "MESSAGE",
 }

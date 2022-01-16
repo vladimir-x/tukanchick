@@ -97,10 +97,15 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundB.create(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
 
 
+        const messages = this.add.text(0, 500, "").setFontSize(50).setColor("RED")
+
         MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.onStartTurn, this)
        // MapScene.emitter.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
         MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
         MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
+        MapScene.emitter.on(EventsEnum.MESSAGE, (msg: any)=>{
+            messages.setText(msg)
+        }, this)
 
         this.onStartTurn();
     }

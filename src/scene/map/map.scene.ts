@@ -3,7 +3,6 @@ import {MapConfig} from "../../entity/mapConfig";
 import {IslandEnum} from "../../enums/islands.enum";
 import {Assets} from "../../assets";
 import {ScenesEnum} from "../../enums/scenes.enum";
-import {configCamera} from "./camera";
 import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
@@ -19,6 +18,7 @@ import {ScoreZonesEnum} from "../../enums/scoreZones.enum";
 import TownSpawner from "./townSpawner";
 import {TownLetters} from "../../enums/townLetters";
 import {TownMapZone} from "../../entity/townMapZone";
+import MapCamera from "./camera";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -141,6 +141,9 @@ export default class MapScene extends Phaser.Scene {
         this.townZones = new Map()
         mapInfo.towns.forEach((z) => this.townZones.set(z.letter, z))
 
+        let justMoving: boolean = false
+        let touchCount: number = 0;
+
         this.hexagons.forEach((h: Hexagon, key: number) => {
 
                 if (this.isTown(h.artifact)) {
@@ -150,9 +153,6 @@ export default class MapScene extends Phaser.Scene {
 
                     this.townByLetter.get(h.townLetter).push(h)
                 }
-
-                let downX = 0
-                let downY = 0
 
                 const polygonGeom = new Phaser.Geom.Polygon(h.points)
                 const polygonGameObject = this.add.polygon(0, 0, h.points).setOrigin(0, 0)
@@ -164,30 +164,41 @@ export default class MapScene extends Phaser.Scene {
 
                 this.drawTownLetter(h)
 
+
                 polygonGameObject
                     .setInteractive(polygonGeom,
                         (hitArea: Phaser.Geom.Polygon, x: number, y: number) => hitArea.contains(x, y))
                     .on('pointerdown', (pointer: any, localX: any, localY: any) => {
-                        if (pointer.leftButtonDown()) {
-                            downX = localX
-                            downY = localY
 
+                        touchCount++
+
+                        if (touchCount >= 2) {
+                            justMoving = true
+                            touchCount = 2
+                            this.hexA = null
+                        } else if (pointer.leftButtonDown()) {
                             this.hexA = h
                         }
+
+
                     })
                     .on('pointerup', (pointer: any, localX: any, localY: any) => {
-                        if (pointer.leftButtonReleased()) {
-                            if (downX == localX && downY == localY) {
 
-                                this.onClick(h)
-                            } else {
-                                this.hexB = h
-                                this.clearSelected()
-                                this.onClick(this.hexA)
-                                this.onClick(this.hexB)
-                                MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
+                        touchCount--
+
+                        if (justMoving) {
+                            if (touchCount <= 0) {
+                                touchCount = 0
+                                justMoving = false
                             }
+                        } else if (pointer.leftButtonReleased()) {
+                            this.hexB = h
+                            this.clearSelected()
+                            this.onClick(this.hexA)
+                            this.onClick(this.hexB)
+                            MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
                         }
+
                     })
             }
         )
@@ -224,7 +235,7 @@ export default class MapScene extends Phaser.Scene {
         MapScene.emitter.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
 
         //----
-        configCamera(this, map.width, map.height)
+        new MapCamera(this, map.width, map.height)
 
         //----
         MapScene.emitter.emit(EventsEnum.START_GAME)

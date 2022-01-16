@@ -13,6 +13,9 @@ const config = {
     scale: {
         autoCenter: Center.NO_CENTER,
         mode: Phaser.Scale.RESIZE,
+    },
+    input: {
+        activePointers: 3,
     }
 } as Phaser.Types.Core.GameConfig;
 
