@@ -193,12 +193,18 @@ export default class MapScene extends Phaser.Scene {
                             }
                         } else if (pointer.leftButtonReleased()) {
                             this.hexB = h
-                            this.clearSelected()
-                            this.onClick(this.hexA)
-                            this.onClick(this.hexB)
                             MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
                         }
 
+                    })
+                    .on('pointerover', (pointer: any, localX: any, localY: any) => {
+                        this.addToSelected(h.index)
+
+                    })
+                    .on('pointerout', (pointer: any, localX: any, localY: any) => {
+                        if (this.hexA != h && this.hexB != h) {
+                            this.removeFromSelected(h.index)
+                        }
                     })
             }
         )
@@ -252,54 +258,8 @@ export default class MapScene extends Phaser.Scene {
         }
     }
 
-    private onClick(hexagon: Hexagon) {
-
-        if (!this.playerInfo.turnComplete || this.playerInfo.bonusRoad > 0) {
-            const hexagonIndex = hexagon.index
-
-            const emptyA = this.playerInfo.selectA === null || this.playerInfo.selectA === undefined
-            const emptyB = this.playerInfo.selectB === null || this.playerInfo.selectB === undefined
-
-            if (this.playerInfo.selectA == hexagonIndex) {
-                this.playerInfo.selectA = this.playerInfo.selectB
-                this.playerInfo.selectGroundA = this.playerInfo.selectGroundB
-
-                this.playerInfo.selectB = null
-                this.playerInfo.selectGroundB = null
-
-                this.removeFromSelected(hexagonIndex)
-            } else if (this.playerInfo.selectB == hexagonIndex) {
-                this.playerInfo.selectB = null
-                this.playerInfo.selectGroundB = null
-                this.removeFromSelected(hexagonIndex)
-            } else if (emptyA
-                && (this.sameGround(this.playerInfo.groundA, hexagon.ground)
-                    || this.sameGround(this.playerInfo.groundB, hexagon.ground))) {
-                this.playerInfo.selectA = hexagonIndex
-                this.playerInfo.selectGroundA = hexagon.ground
-                this.addToSelected(hexagonIndex)
-            } else if (emptyB
-                && (
-                    (this.sameGround(this.playerInfo.groundA, hexagon.ground) && this.sameGround(this.playerInfo.groundB, this.playerInfo.selectGroundA))
-                    ||
-                    (this.sameGround(this.playerInfo.groundB, hexagon.ground) && this.sameGround(this.playerInfo.groundA, this.playerInfo.selectGroundA))
-                )
-            ) {
-                const nIndex = this.hexagons.get(this.playerInfo.selectA)
-                    .neighbours
-                    .find((n) => n === hexagonIndex)
-                if (nIndex >= 0) {
-                    this.playerInfo.selectB = hexagonIndex
-                    this.playerInfo.selectGroundB = hexagon.ground
-                    this.addToSelected(hexagonIndex)
-                }
-
-            }
-        }
-    }
-
     private sameGround(a: GroundsEnum, b: GroundsEnum): boolean {
-        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER || this.playerInfo.bonusRoad > 0
+        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER
     }
 
     private addToSelected(hexagonIndex: number) {
@@ -311,34 +271,55 @@ export default class MapScene extends Phaser.Scene {
         if (pgo) {
             pgo.isFilled = false
         }
-        //this.polygonGameObjects.get(hexagonIndex).isFilled = false
     }
 
     private clearSelected() {
-        this.removeFromSelected(this.playerInfo.selectA)
-        this.removeFromSelected(this.playerInfo.selectB)
+        this.polygonGameObjects.forEach((p: any, index: number) => {
+            this.removeFromSelected(index)
+        })
         this.playerInfo.selectA = null
         this.playerInfo.selectB = null
     }
 
+    private checkSelectedHex(): boolean {
+
+        // есть ли выбор
+        if (!this.hexA || !this.hexB) {
+            return false
+        }
+
+        // подходятли по картам
+        if (this.playerInfo.bonusRoad > 0) {
+            // всегда подходят
+        } else {
+            const aa = this.sameGround(this.playerInfo.groundA, this.hexA.ground)
+            const ab = this.sameGround(this.playerInfo.groundA, this.hexB.ground)
+            const ba = this.sameGround(this.playerInfo.groundB, this.hexA.ground)
+            const bb = this.sameGround(this.playerInfo.groundB, this.hexB.ground)
+
+            if ((aa && bb) || (ab && ba)) {
+                // есть подходящая пара
+            } else {
+                return false
+            }
+        }
+
+        //проверить соседство
+        const nIndex = this.hexA.neighbours.find((n) => n === this.hexB.index)
+        return nIndex >= 0
+    }
+
     private makeRoad() {
 
-        const emptyA = this.playerInfo.selectA === null || this.playerInfo.selectA === undefined
-        const emptyB = this.playerInfo.selectB === null || this.playerInfo.selectB === undefined
+        if (this.checkSelectedHex()) {
 
-        if ((!this.playerInfo.turnComplete || this.playerInfo.bonusRoad > 0) && !emptyA && !emptyB) {
-
-            const hexA = this.hexagons.get(this.playerInfo.selectA)
-            const hexB = this.hexagons.get(this.playerInfo.selectB)
-
-            const pointA = this.hexagonCenter(hexA)
-            const pointB = this.hexagonCenter(hexB)
+            const pointA = this.hexagonCenter(this.hexA)
+            const pointB = this.hexagonCenter(this.hexB)
 
             this.add.line(0, 0, pointA.x, pointA.y, pointB.x, pointB.y, 0xff0000).setOrigin(0, 0)
                 .setLineWidth(3, 3)
 
-            this.addToRoads(this.playerInfo.selectA, this.playerInfo.selectB)
-            this.addToRoads(this.playerInfo.selectB, this.playerInfo.selectA)
+            this.addToRoads(this.hexA.index, this.hexB.index)
             this.clearSelected()
 
             //----
@@ -358,8 +339,9 @@ export default class MapScene extends Phaser.Scene {
             if (this.playerInfo.bonusRoad == 0) {
                 MapScene.emitter.emit(EventsEnum.END_TURN)
             }
+        } else {
+            this.clearSelected()
         }
-
     }
 
     private addToRoads(a: number, b: number) {
