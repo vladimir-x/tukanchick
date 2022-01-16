@@ -119,3 +119,7 @@ export function shuffleArray(array: any[]) {
         [array[i], array[j]] = [array[j], array[i]];
     }
 }
+
+export function getRandom(max: number): number {
+    return Math.floor(Math.random() * max);
+}
