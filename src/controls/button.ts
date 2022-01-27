@@ -1,49 +1,40 @@
-import Image = Phaser.GameObjects.Image;
 import Text = Phaser.GameObjects.Text;
+import {Image} from "./image";
 
-export class Button {
+export class Button extends Image {
 
-    textureKey: string
-
-    imageGO: Image
     textGO: Text
 
-    constructor(private scene: Phaser.Scene) {
-
-    }
-
-    preload(texture: string) {
-        this.textureKey = texture
-
-        this.scene.load.image(texture, this.textureKey);
+    constructor(scene: Phaser.Scene) {
+        super(scene)
     }
 
     create(x: number, y: number, text?: string, onClick?: Function) {
-
-        this.imageGO = this.scene.add.image(x, y, this.textureKey).setOrigin(0, 0);
+        super.create(x, y)
         if (text) {
             this.textGO = this.scene.add.text(x, y, text).setOrigin(0, 0);
         }
 
-        if (onClick) {
+        if (onClick && this.imageGO) {
             this.imageGO.setInteractive().on("pointerup", onClick)
         }
         return this
     }
 
-    setDisplaySize(width: number, height: number) {
-        this.imageGO.setDisplaySize(width, height)
+    setOrigin(x?: number, y?: number) {
+        super.setOrigin(x, y)
+        this.textGO?.setOrigin(x, y)
         return this
     }
 
-    setTextFont(size: number, color: string){
-        this.textGO.setFontSize(size)
-        this.textGO.setColor(color)
+    setTextFont(size: number, color: string) {
+        this.textGO?.setFontSize(size)
+        this.textGO?.setColor(color)
         return this
     }
 
-    setText(text: string){
-        this.textGO.setText(text)
+    setText(text: string) {
+        this.textGO?.setText(text)
         return this
     }
 

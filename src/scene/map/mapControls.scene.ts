@@ -43,8 +43,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
     preload() {
 
-        this.groundA.preload(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
-        this.groundB.preload(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
+        this.groundA.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
+        this.groundB.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
 
         this.roundLabel.preload(Assets.SAND_1)
         this.makeRoadButton.preload(Assets.SAND_1)
@@ -93,8 +93,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
 
         // const {width, height} = this.scale
-        this.groundA.create(500, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
-        this.groundB.create(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
+        this.groundA.createAtlas(500, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
+        this.groundB.createAtlas(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
 
 
         const messages = this.add.text(0, 500, "").setFontSize(50).setColor("RED")

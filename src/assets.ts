@@ -16,4 +16,8 @@ export enum Assets {
 
     MAPINFO_ISLAND_GRANDE = "assets/isla-grante.info.json",
 
+    STAFF_IMAGE = "assets/staff-frames.png",
+
+    STAFF_JSON = "assets/staff-frames.json",
+
 }

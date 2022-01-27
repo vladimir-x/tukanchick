@@ -4,11 +4,12 @@ import {ScenesEnum} from "../../enums/scenes.enum";
 import {Button} from "../../controls/button";
 import {Assets} from "../../assets";
 import {MapConfig} from "../../entity/mapConfig";
+import {Image} from "../../controls/image";
 
 export default class MainMenuScene extends Phaser.Scene {
 
 
-    background: Button
+    background: Image
 
 
     petitButton: Button
@@ -17,7 +18,7 @@ export default class MainMenuScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAIN_MENU)
 
-        this.background = new Button(this)
+        this.background = new Image(this)
         this.petitButton = new Button(this)
         this.grandeButton = new Button(this)
     }
@@ -25,8 +26,8 @@ export default class MainMenuScene extends Phaser.Scene {
     preload() {
 
         this.background.preload(Assets.MENU_LOGO)
-        this.petitButton.preload(Assets.SAND_1)
-        this.grandeButton.preload(Assets.SAND_1)
+        this.petitButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
+        this.grandeButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
     }
 
     create() {
@@ -34,20 +35,23 @@ export default class MainMenuScene extends Phaser.Scene {
         this.background.create(0, 0)
         const {width, height} = this.background.imageGO
 
-        let buttonWidth = 200
-        let buttonHeight = 50
+        let buttonWidth = 600 * 0.5
+        let buttonHeight = 200 * 0.5
         let buttonSpace = 10
 
-        this.petitButton.create(width * 0.5, height * 0.6,
-            'Isla petit (2)',
+        this.petitButton.create(width * 0.5, height * 0.3,
+            null,
             () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT, roundCount: 2} as MapConfig)
-        ).setDisplaySize(buttonWidth, buttonHeight).textGO.setFontSize(20).setColor("red")
+        ).changeFrame('ISLA_PETIT').setDisplaySize(buttonWidth, buttonHeight)
+            .setOrigin(0.5, 0)
 
 
-        this.grandeButton.create(width * 0.5, height * 0.6 + buttonHeight + buttonSpace,
-            'Isla grande (3)',
+        this.grandeButton.create(width * 0.5, height * 0.3 + buttonHeight + buttonSpace,
+            null,
             () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig)
-        ).setDisplaySize(buttonWidth, buttonHeight).textGO.setFontSize(20).setColor("red")
+        ).changeFrame('ISLA_GRANDE').setDisplaySize(buttonWidth, buttonHeight)
+            .setOrigin(0.5, 0)
+
 
         this.add.text(0, 0, "ver" + "0.0.2").setOrigin(0)
     }

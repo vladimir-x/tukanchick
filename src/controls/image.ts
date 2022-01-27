@@ -1,23 +1,49 @@
+enum ImageType {TEXTURE, ATLAS}
+
 export class Image {
 
+    imageType: ImageType
+
+    textureKey: string
     textureAtlas: string
 
     imageGO: Phaser.GameObjects.Image
 
-    constructor(private scene: Phaser.Scene) {
+    constructor(protected scene: Phaser.Scene) {
 
     }
 
-    preload(textureAtlasImagePath: string, textureAtlasJsonPath: string) {
-        this.textureAtlas = textureAtlasImagePath
+    preload(texture: string) {
+        this.imageType = ImageType.TEXTURE
 
+        this.textureKey = texture
+        this.scene.load.image(texture, this.textureKey);
+    }
+
+    preloadAtlas(textureAtlasImagePath: string, textureAtlasJsonPath: string) {
+        this.imageType = ImageType.ATLAS
+
+        this.textureAtlas = textureAtlasImagePath
         this.scene.load.atlas(textureAtlasImagePath, textureAtlasImagePath, textureAtlasJsonPath);
     }
 
-    create(x: number, y: number, firstFrame: string = '') {
+    create(x: number, y: number) {
+        return this.imageType === ImageType.ATLAS ?
+            this.createAtlas(x, y) : this.createTexture(x, y)
+    }
 
+    createTexture(x: number, y: number) {
+        this.imageGO = this.scene.add.image(x, y, this.textureKey).setOrigin(0, 0);
+        return this
+    }
+
+    createAtlas(x: number, y: number, firstFrame: string = '') {
         this.imageGO = this.scene.add.image(x, y, this.textureAtlas, firstFrame).setOrigin(0, 0);
+        return this
+    }
 
+    setOrigin(x?: number, y?: number) {
+        this.imageGO?.setOrigin(x, y)
         return this
     }
 
@@ -32,3 +58,4 @@ export class Image {
     }
 
 }
+
