@@ -19,11 +19,9 @@ import TownSpawner from "./townSpawner";
 import {TownLetters} from "../../enums/townLetters";
 import {TownMapZone} from "../../entity/townMapZone";
 import MapCamera from "./camera";
+import {EventBus} from "../bus/EventBus";
 
 export default class MapScene extends Phaser.Scene {
-
-    static emitter: Phaser.Events.EventEmitter = new Phaser.Events.EventEmitter()
-
 
     mapConfig: MapConfig
 
@@ -66,7 +64,7 @@ export default class MapScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAP);
 
-        MapScene.emitter.destroy()
+        EventBus.clear()
 
         this.scoreZones = []
         for (const z in ScoreZonesEnum) {
@@ -75,7 +73,7 @@ export default class MapScene extends Phaser.Scene {
 
 
         for (let e in EventsEnum) {
-            MapScene.emitter.on(e, (event: any) => {
+            EventBus.on(e as EventsEnum, (event: any) => {
                 console.log("EVENT >>>", e)
             })
         }
@@ -141,8 +139,12 @@ export default class MapScene extends Phaser.Scene {
         this.townZones = new Map()
         mapInfo.towns.forEach((z) => this.townZones.set(z.letter, z))
 
-        let justMoving: boolean = false
-        let touchCount: number = 0;
+
+        //----
+
+        const camera = new MapCamera(this, map.width, map.height)
+
+        //----
 
         this.hexagons.forEach((h: Hexagon, key: number) => {
 
@@ -164,42 +166,26 @@ export default class MapScene extends Phaser.Scene {
 
                 this.drawTownLetter(h)
 
-
                 polygonGameObject
                     .setInteractive(polygonGeom,
-                        (hitArea: Phaser.Geom.Polygon, x: number, y: number) => hitArea.contains(x, y))
+                        (hitArea: Phaser.Geom.Polygon, x: number, y: number) => !camera.getDragging() && hitArea.contains(x, y))
                     .on('pointerdown', (pointer: any, localX: any, localY: any) => {
-
-                        touchCount++
-
-                        if (touchCount >= 2) {
-                            justMoving = true
-                            touchCount = 2
-                            this.hexA = null
-                        } else if (pointer.leftButtonDown()) {
+                        if (pointer.leftButtonDown()) {
                             this.hexA = h
                         }
-
-
                     })
                     .on('pointerup', (pointer: any, localX: any, localY: any) => {
-
-                        touchCount--
-
-                        if (justMoving) {
-                            if (touchCount <= 0) {
-                                touchCount = 0
-                                justMoving = false
-                            }
-                        } else if (pointer.leftButtonReleased()) {
+                        if (pointer.leftButtonReleased()) {
                             this.hexB = h
-                            MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
+                            EventBus.emit(EventsEnum.MAKE_ROAD)
                         }
-
                     })
                     .on('pointerover', (pointer: any, localX: any, localY: any) => {
-                        this.addToSelected(h.index)
-
+                        if (camera.getDragging()) {
+                            this.clearSelected()
+                        } else {
+                            this.addToSelected(h.index)
+                        }
                     })
                     .on('pointerout', (pointer: any, localX: any, localY: any) => {
                         if (this.hexA != h && this.hexB != h) {
@@ -225,26 +211,24 @@ export default class MapScene extends Phaser.Scene {
 
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
-        MapScene.emitter.on(EventsEnum.START_TURN, this.startTurn, this)
-        MapScene.emitter.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
-        MapScene.emitter.on(EventsEnum.END_TURN, this.endTurn, this)
+        EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
+        EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
+        EventBus.on(EventsEnum.END_TURN, this.endTurn, this)
 
-        MapScene.emitter.on(EventsEnum.START_ROUND, this.startRound, this)
-        MapScene.emitter.on(EventsEnum.END_ROUND, this.endRound, this)
+        EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
+        EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
 
-        MapScene.emitter.on(EventsEnum.START_GAME, this.startGame, this)
-        MapScene.emitter.on(EventsEnum.END_GAME, this.endGame, this)
+        EventBus.on(EventsEnum.START_GAME, this.startGame, this)
+        EventBus.on(EventsEnum.END_GAME, this.endGame, this)
 
 
-        MapScene.emitter.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
-        MapScene.emitter.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
-        MapScene.emitter.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
+        EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
+        EventBus.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
+        EventBus.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
 
-        //----
-        new MapCamera(this, map.width, map.height)
 
         //----
-        MapScene.emitter.emit(EventsEnum.START_GAME)
+        EventBus.emit(EventsEnum.START_GAME)
     }
 
     update(time: number, delta: number) {
@@ -279,6 +263,8 @@ export default class MapScene extends Phaser.Scene {
         })
         this.playerInfo.selectA = null
         this.playerInfo.selectB = null
+        this.hexA = null
+        this.hexB = null
     }
 
     private checkSelectedHex(): boolean {
@@ -333,11 +319,11 @@ export default class MapScene extends Phaser.Scene {
             this.checkTownConnection()
 
             //---
-            MapScene.emitter.emit(EventsEnum.MAKE_ROAD_AFTER)
+            EventBus.emit(EventsEnum.MAKE_ROAD_AFTER)
 
             //---
             if (this.playerInfo.bonusRoad == 0) {
-                MapScene.emitter.emit(EventsEnum.END_TURN)
+                EventBus.emit(EventsEnum.END_TURN)
             }
         } else {
             this.clearSelected()
@@ -399,7 +385,7 @@ export default class MapScene extends Phaser.Scene {
             this.artifactConnected.set(hex.artifact, prev + 1)
             hex.artifactConnected = true
 
-            MapScene.emitter.emit(EventsEnum.CONNECT_ARTIFACT, hex)
+            EventBus.emit(EventsEnum.CONNECT_ARTIFACT, hex)
         }
     }
 
@@ -408,7 +394,7 @@ export default class MapScene extends Phaser.Scene {
         this.drawArtifactFound(hex.artifact)
         if (this.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
             // выдать дополнительную дорогу
-            MapScene.emitter.emit(EventsEnum.BONUS_ROAD)
+            EventBus.emit(EventsEnum.BONUS_ROAD)
         }
     }
 
@@ -443,7 +429,7 @@ export default class MapScene extends Phaser.Scene {
                 if (towns[0].net && towns[0].net === towns[1].net) {
                     this.townLetterConnected.add(letter)
 
-                    MapScene.emitter.emit(EventsEnum.CONNECT_TOWN, letter)
+                    EventBus.emit(EventsEnum.CONNECT_TOWN, letter)
                 }
             }
         })
@@ -467,18 +453,15 @@ export default class MapScene extends Phaser.Scene {
         this.playerInfo.turn++
         this.playerInfo.turnComplete = false
 
-        MapScene.emitter.emit(EventsEnum.START_TURN_AFTER)
+        EventBus.emit(EventsEnum.START_TURN_AFTER)
     }
 
     private endTurn() {
-        this.time.delayedCall(300, () => {
-            if (this.deck.size() > 1) {
-                MapScene.emitter.emit(EventsEnum.START_TURN)
-            } else {
-                MapScene.emitter.emit(EventsEnum.END_ROUND)
-            }
-        })
-
+        if (this.deck.size() > 1) {
+            EventBus.emitDelayed(this, 300, EventsEnum.START_TURN)
+        } else {
+            EventBus.emitDelayed(this, 300, EventsEnum.END_ROUND)
+        }
     }
 
     private endRound() {
@@ -489,14 +472,14 @@ export default class MapScene extends Phaser.Scene {
 
         alert('END ROUND !!!')
 
-        MapScene.emitter.emit(EventsEnum.END_ROUND_AFTER)
+        EventBus.emit(EventsEnum.END_ROUND_AFTER)
 
         if (this.playerInfo.round < this.mapConfig.roundCount) {
-            MapScene.emitter.emit(EventsEnum.START_ROUND)
+            EventBus.emit(EventsEnum.START_ROUND)
         } else {
 
 
-            MapScene.emitter.emit(EventsEnum.END_GAME)
+            EventBus.emit(EventsEnum.END_GAME)
         }
     }
 
@@ -554,13 +537,13 @@ export default class MapScene extends Phaser.Scene {
         this.playerInfo.round += 1
         this.playerInfo.turn = 0
 
-        MapScene.emitter.emit(EventsEnum.START_ROUND_AFTER)
-        MapScene.emitter.emit(EventsEnum.START_TURN)
+        EventBus.emit(EventsEnum.START_ROUND_AFTER)
+        EventBus.emit(EventsEnum.START_TURN)
     }
 
 
     private startGame() {
-        MapScene.emitter.emit(EventsEnum.START_ROUND)
+        EventBus.emit(EventsEnum.START_ROUND)
     }
 
     private endGame() {

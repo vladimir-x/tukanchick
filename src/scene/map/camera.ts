@@ -1,6 +1,8 @@
 import * as Phaser from "phaser";
 import Pointer = Phaser.Input.Pointer;
 import Vector2Like = Phaser.Types.Math.Vector2Like;
+import {EventsEnum} from "../../enums/events.enum";
+import {EventBus} from "../bus/EventBus";
 
 export default class MapCamera {
 
@@ -9,13 +11,23 @@ export default class MapCamera {
 
     downZoom: number;
 
+    dragging: boolean = false;
 
-    constructor(private scene: Phaser.Scene, private  maxWidth: number, private  maxHeight: number) {
+    minZoom: number;
+    maxZoom: number;
+
+    constructor(private scene: Phaser.Scene, mapWidth: number, mapHeight: number) {
+
+        const canvasWidth = scene.sys.game.canvas.width;
+        const canvasHeight = scene.sys.game.canvas.height;
+
+        this.minZoom = Math.min(canvasHeight / mapHeight, canvasWidth / mapWidth)
+        this.maxZoom = Math.min(mapHeight / canvasHeight, mapWidth / canvasWidth)
 
 
         const camera = scene.cameras.main;
 
-        camera.setBounds(0, 0, maxWidth, maxHeight)
+        camera.setBounds(0, 0, mapWidth, mapHeight)
         camera.zoom = 0.7
 
         let beforeX = 0
@@ -24,7 +36,6 @@ export default class MapCamera {
         let downX = 0
         let downY = 0
 
-        let dragging = false
 
         let touchCount: number = 0;
 
@@ -36,7 +47,7 @@ export default class MapCamera {
             this.downScale[pointer.id] = {x: pointer.x, y: pointer.y}
 
             if (pointer.middleButtonDown() || touchCount >= 2) {//|| pointer.id == 2
-                dragging = true
+                this.dragging = true
 
                 downX = pointer.x
                 downY = pointer.y
@@ -44,33 +55,32 @@ export default class MapCamera {
                 beforeX = camera.scrollX
                 beforeY = camera.scrollY
 
+                EventBus.emit(EventsEnum.START_CAMERA_MOVE)
             }
 
         })
         scene.input.on("pointermove", (pointer: any) => {
-
-
-            if (dragging) {
+            if (this.dragging) {
                 if (pointer.isDown) {
 
                     this.currScale[pointer.id] = {x: pointer.x, y: pointer.y}
-
                     if (pointer.id != 2) {
                         camera.scrollX = beforeX - pointer.x + downX
                         camera.scrollY = beforeY - pointer.y + downY
                     }
-
                     this.scaleByTouch()
 
                 } else {
-                    dragging = false
+                    this.dragging = false
                     touchCount = 0
+                    EventBus.emit(EventsEnum.STOP_CAMERA_MOVE)
                 }
             }
         })
         scene.input.on("pointerup", (pointer: Pointer) => {
-            dragging = false
+            this.dragging = false
             touchCount = 0
+            EventBus.emit(EventsEnum.STOP_CAMERA_MOVE)
         })
         scene.input.on('wheel', (pointer: Pointer, currentlyOver: any, dx: any, dy: any, dz: any, event: any) => {
             this.scaleByScroll(dy)
@@ -86,22 +96,19 @@ export default class MapCamera {
             const diff = a - b
 
 
-            let newZoom = this.downZoom + diff * 0.001
-            newZoom = newZoom > 3 ? 3 : newZoom
-            newZoom = newZoom < 0.3 ? 0.3 : newZoom
-
-            const camera = this.scene.cameras.main;
-            camera.zoom = newZoom
+            this.setZoom(this.downZoom + diff * 0.001)
         }
     }
 
     scaleByScroll(dy: number) {
         const camera = this.scene.cameras.main;
-        let newZoom = camera.zoom - dy * 0.01
+        this.setZoom(camera.zoom - dy * 0.001)
+    }
 
-        newZoom = newZoom > 3 ? 3 : newZoom
-        newZoom = newZoom < 0.3 ? 0.3 : newZoom
-        camera.zoom = newZoom
+    setZoom(newZoom: number) {
+        newZoom = newZoom > this.maxZoom ? this.maxZoom : newZoom
+        newZoom = newZoom < this.minZoom ? this.minZoom : newZoom
+        this.scene.cameras.main.zoom = newZoom
     }
 
     calcGipp(points: Vector2Like[]) {
@@ -109,6 +116,10 @@ export default class MapCamera {
         const b = points[1].y - points[2].y
 
         return Math.sqrt(a * a + b * b)
+    }
+
+    getDragging() {
+        return this.dragging
     }
 
 }

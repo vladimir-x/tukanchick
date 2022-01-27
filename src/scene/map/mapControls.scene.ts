@@ -6,7 +6,7 @@ import {EventsEnum} from "../../enums/events.enum";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {Assets} from "../../assets";
 import {Image} from "../../controls/image";
-import {GroundsEnum} from "../../enums/grounds.enum";
+import {EventBus} from "../bus/EventBus";
 
 export default class MapControlsScene extends Phaser.Scene {
 
@@ -67,7 +67,7 @@ export default class MapControlsScene extends Phaser.Scene {
 
 
         this.nextTurnButtonButton.create(0, 50, "END-TURN",
-            () => MapScene.emitter.emit(EventsEnum.START_TURN)
+            () => EventBus.emit(EventsEnum.START_TURN)
         ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("red")
 
         this.turnCount.create(100, 50, "TURN").setDisplaySize(100, 50)
@@ -75,21 +75,21 @@ export default class MapControlsScene extends Phaser.Scene {
 
 
         this.makeRoadButton.create(0, 100, "MAKE-ROAD",
-            () => MapScene.emitter.emit(EventsEnum.MAKE_ROAD)
+            () => EventBus.emit(EventsEnum.MAKE_ROAD)
         ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("green")
 
         this.roadCount.create(100, 100, "ROADS").setDisplaySize(100, 50)
             .textGO.setFontSize(40).setColor("red")
 
 
-        this.roundLabel.imageGO.alpha=0.5
-        this.roundCount.imageGO.alpha=0.5
+        this.roundLabel.imageGO.alpha = 0.5
+        this.roundCount.imageGO.alpha = 0.5
 
-        this.nextTurnButtonButton.imageGO.alpha=0.5
-        this.turnCount.imageGO.alpha=0.5
+        this.nextTurnButtonButton.imageGO.alpha = 0.5
+        this.turnCount.imageGO.alpha = 0.5
 
-        this.makeRoadButton.imageGO.alpha=0.5
-        this.roadCount.imageGO.alpha=0.5
+        this.makeRoadButton.imageGO.alpha = 0.5
+        this.roadCount.imageGO.alpha = 0.5
 
 
         // const {width, height} = this.scale
@@ -97,14 +97,21 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundB.createAtlas(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
 
 
-        const messages = this.add.text(0, 500, "").setFontSize(50).setColor("RED")
+        const messages = this.add.text(0, 500, "").setFontSize(80).setFontStyle('bold').setColor("RED")
 
-        MapScene.emitter.on(EventsEnum.START_ROUND_AFTER, this.onStartTurn, this)
-       // MapScene.emitter.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
-        MapScene.emitter.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
-        MapScene.emitter.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
-        MapScene.emitter.on(EventsEnum.MESSAGE, (msg: any)=>{
-            messages.setText(msg)
+
+        EventBus.on(EventsEnum.START_ROUND_AFTER, this.onStartTurn, this)
+       // EventBus.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
+        EventBus.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
+        EventBus.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
+
+
+        let number = 0
+        let messageLog = ''
+        EventBus.on(EventsEnum.MESSAGE, (msg: string) => {
+            messageLog = number + " " + msg + "\n" + messageLog
+            number++
+            messages.setText(messageLog.split("\n").slice(0, 10))
         }, this)
 
         this.onStartTurn();
@@ -131,7 +138,7 @@ export default class MapControlsScene extends Phaser.Scene {
     }
 
 
-    private updateRoundCount(){
+    private updateRoundCount() {
         this.roundCount.textGO.text = this.playerInfo.round.toString()
 
     }
@@ -141,18 +148,18 @@ export default class MapControlsScene extends Phaser.Scene {
         this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
     }
 
-   /* private updateScore() {
+    /* private updateScore() {
 
-        if (this.playerInfo.roundScore[0] > 0) {
+         if (this.playerInfo.roundScore[0] > 0) {
 
-        }
-        if (this.playerInfo.roundScore[1] > 0) {
+         }
+         if (this.playerInfo.roundScore[1] > 0) {
 
-        }
-        if (this.playerInfo.roundScore[2] > 0) {
+         }
+         if (this.playerInfo.roundScore[2] > 0) {
 
-        }
-    }
-*/
+         }
+     }
+ */
 
 }
