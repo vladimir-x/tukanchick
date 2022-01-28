@@ -168,7 +168,7 @@ export default class MapScene extends Phaser.Scene {
 
                 polygonGameObject
                     .setInteractive(polygonGeom,
-                        (hitArea: Phaser.Geom.Polygon, x: number, y: number) => !camera.getDragging() && hitArea.contains(x, y))
+                        (hitArea: Phaser.Geom.Polygon, x: number, y: number) => this.playerInfo.readyTouch && !camera.getDragging() && hitArea.contains(x, y))
                     .on('pointerdown', (pointer: any, localX: any, localY: any) => {
                         if (pointer.leftButtonDown()) {
                             this.hexA = h
@@ -238,7 +238,7 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
+            deckSize: 0, name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
         }
     }
 
@@ -299,6 +299,8 @@ export default class MapScene extends Phaser.Scene {
 
         if (this.checkSelectedHex()) {
 
+            this.playerInfo.readyTouch = false
+
             const pointA = this.hexagonCenter(this.hexA)
             const pointB = this.hexagonCenter(this.hexB)
 
@@ -324,6 +326,8 @@ export default class MapScene extends Phaser.Scene {
             //---
             if (this.playerInfo.bonusRoad == 0) {
                 EventBus.emit(EventsEnum.END_TURN)
+            } else {
+                this.playerInfo.readyTouch = true
             }
         } else {
             this.clearSelected()
@@ -452,6 +456,9 @@ export default class MapScene extends Phaser.Scene {
 
         this.playerInfo.turn++
         this.playerInfo.turnComplete = false
+        this.playerInfo.readyTouch = true
+
+        this.playerInfo.deckSize = this.deck.size()
 
         EventBus.emit(EventsEnum.START_TURN_AFTER)
     }

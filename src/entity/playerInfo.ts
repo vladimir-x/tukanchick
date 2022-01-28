@@ -6,6 +6,8 @@ export interface PlayerInfo {
 
     turn: number
 
+    deckSize: number
+
     round: number
 
     turnComplete: boolean
@@ -25,4 +27,6 @@ export interface PlayerInfo {
     bonusRoad: number
 
     scores: number[]
+
+    readyTouch?: boolean
 }

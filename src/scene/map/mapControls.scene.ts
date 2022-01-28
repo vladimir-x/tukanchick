@@ -12,22 +12,26 @@ export default class MapControlsScene extends Phaser.Scene {
 
     playerInfo: PlayerInfo
 
+    back: Image
+
     groundA: Image
     groundB: Image
 
     bonusRoad: Button
 
     roundLabel: Button
-    makeRoadButton: Button
-    nextTurnButtonButton: Button
+    deckSizeLabel: Button
+    nextTurnLabel: Button
 
     roundCount: Button
-    roadCount: Button
+    deckSizeCount: Button
     turnCount: Button
 
 
     constructor() {
         super(ScenesEnum.MAP_CONTROLS)
+
+        this.back = new Image(this)
 
         this.groundA = new Image(this)
         this.groundB = new Image(this)
@@ -35,11 +39,11 @@ export default class MapControlsScene extends Phaser.Scene {
         this.bonusRoad = new Button(this)
 
         this.roundLabel = new Button(this)
-        this.makeRoadButton = new Button(this)
-        this.nextTurnButtonButton = new Button(this)
+        this.deckSizeLabel = new Button(this)
+        this.nextTurnLabel = new Button(this)
 
         this.roundCount = new Button(this)
-        this.roadCount = new Button(this)
+        this.deckSizeCount = new Button(this)
         this.turnCount = new Button(this)
 
 
@@ -47,17 +51,19 @@ export default class MapControlsScene extends Phaser.Scene {
 
     preload() {
 
+        this.back.preload(Assets.SAND_1)
+
         this.groundA.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
         this.groundB.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
 
         this.bonusRoad.preload(Assets.SAND_1)
 
         this.roundLabel.preload(Assets.SAND_1)
-        this.makeRoadButton.preload(Assets.SAND_1)
-        this.nextTurnButtonButton.preload(Assets.SAND_1)
+        this.deckSizeLabel.preload(Assets.SAND_1)
+        this.nextTurnLabel.preload(Assets.SAND_1)
 
         this.roundCount.preload(Assets.SAND_1)
-        this.roadCount.preload(Assets.SAND_1)
+        this.deckSizeCount.preload(Assets.SAND_1)
         this.turnCount.preload(Assets.SAND_1)
 
         this.turnCount.preload(Assets.SAND_1)
@@ -67,50 +73,36 @@ export default class MapControlsScene extends Phaser.Scene {
 
     create() {
 
-        this.roundLabel.create(0, 0, "ROUND").setDisplaySize(100, 50).textGO.setFontSize(20).setColor("black")
-        this.roundCount.create(100, 0, "ROUND_COUNT").setDisplaySize(100, 50)
-            .textGO.setFontSize(40).setColor("black")
+
+        const controlPanelWidth = this.sys.game.canvas.width;
+        const controlPanelHeight = 150
+
+        const centerX = controlPanelWidth / 2;
+
+        this.back.create(0, 0).setDisplaySize(controlPanelWidth, controlPanelHeight).setAlphaImage(0.8)
+
+        this.roundLabel.create(0, 0, "ROUND").setDisplaySize(100, 50).setTextFont(20, "black").setAlphaImage(0.5)
+        this.roundCount.create(100, 0, "ROUND_COUNT").setDisplaySize(100, 50).setTextFont(40, "black").setAlphaImage(0.5)
+
+        this.nextTurnLabel.create(0, 50, "END-TURN").setDisplaySize(100, 50).setTextFont(20, "red").setAlphaImage(0.5)
+        this.turnCount.create(100, 50, "TURN").setDisplaySize(100, 50).setTextFont(40, "red").setAlphaImage(0.5)
+
+        this.deckSizeLabel.create(0, 100, "DECK-SIZE").setDisplaySize(100, 50).setTextFont(20, "green").setAlphaImage(0.5)
+        this.deckSizeCount.create(100, 100, "_").setDisplaySize(100, 50).setTextFont(40, "green").setAlphaImage(0.5)
 
 
-        this.nextTurnButtonButton.create(0, 50, "END-TURN",
-            () => EventBus.emit(EventsEnum.START_TURN)
-        ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("red")
+        this.groundA.createAtlas(centerX - 100, 0).setDisplaySize(200, 234).setOrigin(0.5, 0).imageGO.setScale(0.5)
+        this.groundB.createAtlas(centerX + 100, 0).setDisplaySize(200, 234).setOrigin(0.5, 0).imageGO.setScale(0.5)
 
-        this.turnCount.create(100, 50, "TURN").setDisplaySize(100, 50)
-            .textGO.setFontSize(40).setColor("red")
-
-
-        this.makeRoadButton.create(0, 100, "MAKE-ROAD",
-            () => EventBus.emit(EventsEnum.MAKE_ROAD)
-        ).setDisplaySize(100, 50).textGO.setFontSize(20).setColor("green")
-
-        this.roadCount.create(100, 100, "ROADS").setDisplaySize(100, 50)
-            .textGO.setFontSize(40).setColor("red")
-
-
-        this.roundLabel.imageGO.alpha = 0.5
-        this.roundCount.imageGO.alpha = 0.5
-
-        this.nextTurnButtonButton.imageGO.alpha = 0.5
-        this.turnCount.imageGO.alpha = 0.5
-
-        this.makeRoadButton.imageGO.alpha = 0.5
-        this.roadCount.imageGO.alpha = 0.5
-
-
-        // const {width, height} = this.scale
-        this.groundA.createAtlas(500, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
-        this.groundB.createAtlas(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
-
-        this.bonusRoad.create(400,0,"FREE-ROAD")
-            .setDisplaySize(500, 90).setTextFont(80, "blue")
-            .setAlphaImage(0.8).setVisible(false)
+        this.bonusRoad.create(centerX, 0, '_').setOrigin(0.5, 0)
+            .setDisplaySize(500, controlPanelHeight).setTextFont(80, "blue")
+            .setAlphaImage(0.5).setVisible(false)
 
         const messages = this.add.text(0, 500, "").setFontSize(80).setFontStyle('bold').setColor("RED")
 
 
         EventBus.on(EventsEnum.START_ROUND_AFTER, this.onStartTurn, this)
-       // EventBus.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
+        // EventBus.on(EventsEnum.END_ROUND_AFTER, this.updateScore, this)
         EventBus.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
         EventBus.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
 
@@ -154,8 +146,9 @@ export default class MapControlsScene extends Phaser.Scene {
 
     private updateRoadCounter() {
         const oneRoad = (this.playerInfo.turnComplete ? 0 : 1)
-        this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
+        this.deckSizeCount.setText(this.playerInfo.deckSize.toString())
 
+        this.bonusRoad.setText(`FREE-ROAD ${this.playerInfo.bonusRoad}`)
         this.bonusRoad.setVisible(this.playerInfo.bonusRoad > 0)
     }
 
