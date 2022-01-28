@@ -42,10 +42,7 @@ export default class TownSpawner {
         */
     }
 
-
-    public pop(): TownLetters {
-        return this.items.pop()
+    public getByNumber(n: number): TownLetters {
+        return this.items[n - 1];
     }
-
-
 }

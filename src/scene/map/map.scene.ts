@@ -149,8 +149,9 @@ export default class MapScene extends Phaser.Scene {
         this.hexagons.forEach((h: Hexagon, key: number) => {
 
                 if (this.isTown(h.artifact)) {
-                    h.net = Number(h.artifact.substring(5))
-                    h.townLetter = townSpawner.pop()
+                    const townNumber = Number(h.artifact.substring(5))
+                    h.net = townNumber
+                    h.townLetter = townSpawner.getByNumber(townNumber)
                     this.roadNets.set(h.net, h)
 
                     this.townByLetter.get(h.townLetter).push(h)
@@ -247,13 +248,32 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private addToSelected(hexagonIndex: number) {
-        this.polygonGameObjects.get(hexagonIndex).setFillStyle(0x61b65f, 0.6)
+        this.hexagons.get(hexagonIndex).isSelected = true
+        this.markHexagon(hexagonIndex)
     }
 
     private removeFromSelected(hexagonIndex: number) {
+        this.hexagons.get(hexagonIndex).isSelected = false
+        this.markHexagon(hexagonIndex)
+    }
+
+    private markAsConnected(hexagonIndex: number) {
+        this.hexagons.get(hexagonIndex).artifactConnected = true
+        this.markHexagon(hexagonIndex)
+    }
+
+    private markHexagon(hexagonIndex: number) {
+        const hex = this.hexagons.get(hexagonIndex)
         const pgo = this.polygonGameObjects.get(hexagonIndex)
+
         if (pgo) {
-            pgo.isFilled = false
+            if (hex.isSelected) {
+                pgo.setFillStyle(0x61b65f, 0.6)
+            } else if (hex.artifactConnected) {
+                pgo.setFillStyle(0xcccc00, 0.4)
+            } else {
+                pgo.isFilled = false
+            }
         }
     }
 
@@ -387,7 +407,7 @@ export default class MapScene extends Phaser.Scene {
         if (hex.artifact && !hex.artifactConnected && this.isObject(hex.artifact)) {
             const prev = this.artifactConnected.get(hex.artifact) || 0
             this.artifactConnected.set(hex.artifact, prev + 1)
-            hex.artifactConnected = true
+            this.markAsConnected(hex.index)
 
             EventBus.emit(EventsEnum.CONNECT_ARTIFACT, hex)
         }
@@ -432,6 +452,9 @@ export default class MapScene extends Phaser.Scene {
             if (!this.townLetterConnected.has(letter)) {
                 if (towns[0].net && towns[0].net === towns[1].net) {
                     this.townLetterConnected.add(letter)
+
+                    this.markAsConnected(towns[0].index)
+                    this.markAsConnected(towns[1].index)
 
                     EventBus.emit(EventsEnum.CONNECT_TOWN, letter)
                 }

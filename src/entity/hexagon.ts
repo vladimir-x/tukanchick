@@ -19,6 +19,8 @@ export interface Hexagon {
 
     artifactConnected?: boolean
 
+    isSelected?: boolean
+
     townLetter?: TownLetters
 
 }
