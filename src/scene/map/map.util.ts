@@ -120,6 +120,10 @@ export function shuffleArray(array: any[]) {
     }
 }
 
+
+/**
+ * Целое случайное [ 0 ; max ] влючительно
+ */
 export function getRandom(max: number): number {
     return Math.floor(Math.random() * max);
 }

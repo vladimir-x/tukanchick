@@ -15,6 +15,8 @@ export default class MapControlsScene extends Phaser.Scene {
     groundA: Image
     groundB: Image
 
+    bonusRoad: Button
+
     roundLabel: Button
     makeRoadButton: Button
     nextTurnButtonButton: Button
@@ -29,6 +31,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
         this.groundA = new Image(this)
         this.groundB = new Image(this)
+
+        this.bonusRoad = new Button(this)
 
         this.roundLabel = new Button(this)
         this.makeRoadButton = new Button(this)
@@ -45,6 +49,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
         this.groundA.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
         this.groundB.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
+
+        this.bonusRoad.preload(Assets.SAND_1)
 
         this.roundLabel.preload(Assets.SAND_1)
         this.makeRoadButton.preload(Assets.SAND_1)
@@ -96,6 +102,9 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundA.createAtlas(500, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
         this.groundB.createAtlas(600, 0).setDisplaySize(200, 234).imageGO.setScale(0.4, 0.4)
 
+        this.bonusRoad.create(400,0,"FREE-ROAD")
+            .setDisplaySize(500, 90).setTextFont(80, "blue")
+            .setAlphaImage(0.8).setVisible(false)
 
         const messages = this.add.text(0, 500, "").setFontSize(80).setFontStyle('bold').setColor("RED")
 
@@ -146,6 +155,8 @@ export default class MapControlsScene extends Phaser.Scene {
     private updateRoadCounter() {
         const oneRoad = (this.playerInfo.turnComplete ? 0 : 1)
         this.roadCount.textGO.text = oneRoad.toString() + "+" + this.playerInfo.bonusRoad
+
+        this.bonusRoad.setVisible(this.playerInfo.bonusRoad > 0)
     }
 
     /* private updateScore() {

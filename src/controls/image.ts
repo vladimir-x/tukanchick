@@ -57,5 +57,15 @@ export class Image {
         return this
     }
 
+    setVisible(visible: boolean){
+        this.imageGO?.setVisible(visible)
+        return this
+    }
+
+    setAlphaImage(alpha?: number){
+        this.imageGO?.setAlpha(alpha)
+        return this
+    }
+
 }
 

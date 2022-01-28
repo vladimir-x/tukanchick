@@ -11,12 +11,12 @@ export class EventBus {
 
     public static emitDelayed(scene: Phaser.Scene, delay: number = 1, event: EventsEnum, ...args: any[]) {
         scene.time.delayedCall(delay, () => {
-            EventBus.emitter.emit(event, args)
+            EventBus.emit(event, args)
         })
     }
 
     public static emit(event: EventsEnum, ...args: any[]): boolean {
-        return EventBus.emitter.emit(event, args)
+        return EventBus.emitter.emit(event, args.length == 1 ? args[0] : args)
     }
 
     public static on(event: EventsEnum, fn: Function, context?: any) {

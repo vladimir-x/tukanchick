@@ -38,4 +38,15 @@ export class Button extends Image {
         return this
     }
 
+    setVisible(visible: boolean) {
+        super.setVisible(visible)
+        this.textGO?.setVisible(visible)
+        return this
+    }
+
+    setAlphaText(alpha?: number) {
+        this.textGO?.setAlpha(alpha)
+        return this
+    }
+
 }

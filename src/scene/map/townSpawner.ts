@@ -26,7 +26,7 @@ export default class TownSpawner {
 
         this.items = []
 
-        const roll = this.rolls[getRandom(this.rolls.length + 1)]
+        const roll = this.rolls[getRandom(this.rolls.length)]
 
         for (let i = 0; i < roll.length; ++i) {
             this.items.push(roll.charAt(i) as TownLetters)
