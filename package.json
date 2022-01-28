@@ -1,6 +1,6 @@
 {
   "name": "tukanchick",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Web port for board game: Trails of Tucana",
   "license": "MIT",
   "main": "src/index.js",
