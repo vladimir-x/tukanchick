@@ -445,8 +445,6 @@ export default class MapScene extends Phaser.Scene {
 
         const point = this.townZones.get(letter).point
         this.graphics.strokeCircle(point.x, point.y, 45);
-
-        console.log("TownConnect", letter)
     }
 
     private startTurn() {

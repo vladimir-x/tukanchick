@@ -20,12 +20,93 @@
       }
     },
     {
-      "filename": "ISLA_GRANDE",
+      "filename": "OBELISK",
       "frame": {
-        "x": 0,
-        "y": 200,
-        "w": 600,
-        "h": 200
+        "x": 600,
+        "y": 0,
+        "w": 115,
+        "h": 138
+      }
+    },
+    {
+      "filename": "BOOK",
+      "frame": {
+        "x": 600,
+        "y": 138,
+        "w": 115,
+        "h": 105
+      }
+    },
+    {
+      "filename": "TUCAN",
+      "frame": {
+        "x": 600,
+        "y": 243,
+        "w": 115,
+        "h": 120
+      }
+    },
+    {
+      "filename": "COALA",
+      "frame": {
+        "x": 600,
+        "y": 363,
+        "w": 115,
+        "h": 125
+      }
+    },
+    {
+      "filename": "DRAGON",
+      "frame": {
+        "x": 600,
+        "y": 488,
+        "w": 115,
+        "h": 125
+      }
+    },
+    {
+      "filename": "TOWN_A",
+      "frame": {
+        "x": 760,
+        "y": 490,
+        "w": 185,
+        "h": 100
+      }
+    },
+    {
+      "filename": "TOWN_B",
+      "frame": {
+        "x": 760,
+        "y": 590,
+        "w": 185,
+        "h": 100
+      }
+    },
+    {
+      "filename": "TOWN_C",
+      "frame": {
+        "x": 760,
+        "y": 685,
+        "w": 185,
+        "h": 100
+      }
+    },
+    {
+      "filename": "TOWN_D",
+      "frame": {
+        "x": 760,
+        "y": 785,
+        "w": 185,
+        "h": 100
+      }
+    },
+    {
+      "filename": "TOWN_E",
+      "frame": {
+        "x": 760,
+        "y": 885,
+        "w": 185,
+        "h": 100
       }
     }
   ]

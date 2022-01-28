@@ -7,6 +7,8 @@ import {PlayerInfo} from "../../entity/playerInfo";
 import {Assets} from "../../assets";
 import {Image} from "../../controls/image";
 import {EventBus} from "../bus/EventBus";
+import {Hexagon} from "../../entity/hexagon";
+import {TownLetters} from "../../enums/townLetters";
 
 export default class MapControlsScene extends Phaser.Scene {
 
@@ -18,6 +20,8 @@ export default class MapControlsScene extends Phaser.Scene {
     groundB: Image
 
     bonusRoad: Button
+
+    artifactSplash: Image
 
     roundLabel: Button
     deckSizeLabel: Button
@@ -38,6 +42,8 @@ export default class MapControlsScene extends Phaser.Scene {
 
         this.bonusRoad = new Button(this)
 
+        this.artifactSplash = new Image(this)
+
         this.roundLabel = new Button(this)
         this.deckSizeLabel = new Button(this)
         this.nextTurnLabel = new Button(this)
@@ -57,6 +63,8 @@ export default class MapControlsScene extends Phaser.Scene {
         this.groundB.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
 
         this.bonusRoad.preload(Assets.SAND_1)
+
+        this.artifactSplash.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
 
         this.roundLabel.preload(Assets.SAND_1)
         this.deckSizeLabel.preload(Assets.SAND_1)
@@ -98,6 +106,9 @@ export default class MapControlsScene extends Phaser.Scene {
             .setDisplaySize(500, controlPanelHeight).setTextFont(80, "blue")
             .setAlphaImage(0.5).setVisible(false)
 
+        this.artifactSplash.createAtlas(centerX, controlPanelHeight + 20).setOrigin(0.5, 0)
+            .setVisible(false)
+
         const messages = this.add.text(0, 500, "").setFontSize(80).setFontStyle('bold').setColor("RED")
 
 
@@ -106,6 +117,8 @@ export default class MapControlsScene extends Phaser.Scene {
         EventBus.on(EventsEnum.START_TURN_AFTER, this.onStartTurn, this)
         EventBus.on(EventsEnum.MAKE_ROAD_AFTER, this.onMakeRoad, this)
 
+        EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
+        EventBus.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
 
         let number = 0
         let messageLog = ''
@@ -151,6 +164,30 @@ export default class MapControlsScene extends Phaser.Scene {
         this.bonusRoad.setText(`FREE-ROAD ${this.playerInfo.bonusRoad}`)
         this.bonusRoad.setVisible(this.playerInfo.bonusRoad > 0)
     }
+
+    private onConnectArtifact(hex: Hexagon) {
+        this.artifactSplash.changeFrame(hex.artifact).setAlphaImage(1).setVisible(true)
+
+        this.hideArtifactSplash()
+    }
+
+
+    private onConnectTown(letter: TownLetters) {
+        this.artifactSplash.changeFrame(`TOWN_${letter}`).setAlphaImage(1).setVisible(true)
+
+        this.hideArtifactSplash()
+    }
+
+    private hideArtifactSplash() {
+        this.time.delayedCall(400, () => {
+            this.artifactSplash.setAlphaImage(0.7)
+        })
+        this.time.delayedCall(800, () => {
+            this.artifactSplash.setVisible(false)
+        })
+    }
+
+
 
     /* private updateScore() {
 
