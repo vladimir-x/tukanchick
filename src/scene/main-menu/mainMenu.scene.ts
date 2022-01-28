@@ -53,7 +53,7 @@ export default class MainMenuScene extends Phaser.Scene {
             .setOrigin(0.5, 0)
 
 
-        this.add.text(0, 0, "ver " + "0.0.3").setOrigin(0).setFontSize(20).setFontStyle('bold').setColor('black')
+        this.add.text(0, 0, "ver " + "0.0.4").setOrigin(0).setFontSize(20).setFontStyle('bold').setColor('black')
     }
 
     update() {
