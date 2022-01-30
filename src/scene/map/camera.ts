@@ -85,7 +85,7 @@ export default class MapCamera {
 
 
     scaleByTouch() {
-        if (this.downScale[1]?.x && this.currScale[2]?.x) {
+        if (this.downScale[1]?.x && this.currScale[1]?.x&& this.currScale[2]?.x) {
 
             const a = this.calcGipp(this.currScale)
             const b = this.calcGipp(this.downScale)

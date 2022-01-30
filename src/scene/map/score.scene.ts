@@ -6,6 +6,7 @@ import {PlayerInfo} from "../../entity/playerInfo";
 import {Assets} from "../../assets";
 import {Image} from "../../controls/image";
 import {EventBus} from "../bus/EventBus";
+import {ScoreZonesEnum} from "../../enums/scoreZones.enum";
 
 export default class ScoreScene extends Phaser.Scene {
 
@@ -17,6 +18,8 @@ export default class ScoreScene extends Phaser.Scene {
 
     message: Button
 
+    //очки
+    scoreZones: Button[]
 
 
     constructor() {
@@ -27,13 +30,20 @@ export default class ScoreScene extends Phaser.Scene {
         this.message = new Button(this)
         this.next = new Button(this)
 
+        this.scoreZones = []
+        for (const z in ScoreZonesEnum) {
+            this.scoreZones[z] = new Button(this)
+        }
+
     }
 
     preload() {
 
-        this.back.preload(Assets.SAND_1)
+        this.back.preload(Assets.SCORES_IMAGE)
 
+        this.message.preload(Assets.SAND_1)
         this.next.preload(Assets.SAND_1)
+
 
         this.playerInfo = this.scene.settings.data as PlayerInfo
     }
@@ -46,35 +56,57 @@ export default class ScoreScene extends Phaser.Scene {
         const centerX = this.sys.game.canvas.width / 2;
         const centerY = this.sys.game.canvas.height / 2;
 
-        this.back.create(centerX, centerY).setDisplaySize(scorePanelWidth, scorePanelHeight).setAlphaImage(0.8).setOrigin(0.5, 0.5)
+        this.back.create(centerX, centerY).setOrigin(0.5, 0.5).imageGO.setScale(0.7)
 
-        this.message.create(centerX, centerY - scorePanelHeight / 2, "_").setOrigin(0.5, 0)
-            .setDisplaySize(180, 100).setTextFont(40, "blue")
-
-        this.next.create(centerX, centerY + scorePanelHeight / 2, 'NEXT', () => this.onNext()).setOrigin(0.5, 0.5)
-            .setDisplaySize(180, 100).setTextFont(80, "blue")
+        this.message.create(centerX, centerY - 200, "___").setOrigin(0.5, 0)
+            .setDisplaySize(400, 50).setTextFont(40, "blue")
 
 
-        EventBus.on(EventsEnum.END_ROUND_AFTER, this.show, this)
-        EventBus.on(EventsEnum.END_GAME_AFTER, this.show, this)
+        let posY =  centerY - scorePanelHeight / 2 + 50
 
-        this.scene.setVisible(false);
+        this.scoreZones[ScoreZonesEnum.ROUND0].create(centerX - 150, posY - 20, "___").setTextFont(50, "black")
+        this.scoreZones[ScoreZonesEnum.ROUND1].create(centerX - 150, posY + 80, "___").setTextFont(50, "black")
+        this.scoreZones[ScoreZonesEnum.ROUND2].create(centerX - 150, posY + 180, "___").setTextFont(50, "black")
+        this.scoreZones[ScoreZonesEnum.TOWN].create(centerX + 100, posY - 20, "___").setTextFont(50, "black")
+        this.scoreZones[ScoreZonesEnum.TOTAL].create(centerX + 100, posY + 180, "___").setTextFont(50, "black")
+
+        this.next.create(centerX, centerY + 200, 'NEXT', () => this.onNext()).setOrigin(0.5, 0.5)
+            .setDisplaySize(190, 100).setTextFont(80, "blue")
+
+
+        this.show();
     }
 
     show() {
-        this.scene.setVisible(true);
+        // score by rounds
+        for (let i = 0; i < 3; ++i) {
+            const roundScore = this.playerInfo.scores[i]?.toString()
+            if (roundScore) {
+                this.scoreZones[i].setText(roundScore)
+            } else {
+                this.scoreZones[i].setText("")
+            }
+        }
 
         if (this.playerInfo.gameEnd){
+            this.scoreZones[ScoreZonesEnum.TOWN].setText(this.playerInfo.scores[ScoreZonesEnum.TOWN].toString())
+            this.scoreZones[ScoreZonesEnum.TOTAL].setText(this.playerInfo.scores[ScoreZonesEnum.TOTAL].toString())
+
+
             this.message.setText("GAME END")
             this.next.setText("EXIT")
         } else {
             this.message.setText(`ROUND ${this.playerInfo.round} COMPLETE`)
             this.next.setText("NEXT")
         }
+
+        this.scene.setVisible(true);
     }
 
 
     onNext() {
+
+        console.log(">>call onNext() !!!")
         this.scene.setVisible(false);
 
         if (this.playerInfo.gameEnd){
@@ -82,6 +114,8 @@ export default class ScoreScene extends Phaser.Scene {
         } else {
             EventBus.emit(EventsEnum.START_ROUND)
         }
+
+        this.scene.stop()
 
     }
 

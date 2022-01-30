@@ -20,4 +20,6 @@ export enum Assets {
 
     STAFF_JSON = "assets/staff-frames.json",
 
+    SCORES_IMAGE = "assets/scores.png",
+
 }

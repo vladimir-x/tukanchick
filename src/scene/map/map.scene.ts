@@ -163,12 +163,16 @@ export default class MapScene extends Phaser.Scene {
                     .setInteractive(polygonGeom,
                         (hitArea: Phaser.Geom.Polygon, x: number, y: number) => this.playerInfo.readyTouch && !camera.getDragging() && hitArea.contains(x, y))
                     .on('pointerdown', (pointer: any, localX: any, localY: any) => {
-                        if (pointer.leftButtonDown()) {
+                        if (camera.getDragging()) {
+                            this.clearSelected()
+                        } else if (pointer.leftButtonDown()) {
                             this.hexA = h
                         }
                     })
                     .on('pointerup', (pointer: any, localX: any, localY: any) => {
-                        if (pointer.leftButtonReleased()) {
+                        if (camera.getDragging()) {
+                            this.clearSelected()
+                        } else if (pointer.leftButtonReleased()) {
                             this.hexB = h
                             EventBus.emit(EventsEnum.MAKE_ROAD)
                         }
@@ -203,7 +207,6 @@ export default class MapScene extends Phaser.Scene {
 
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
-        this.scene.launch(ScenesEnum.SCORE, this.playerInfo)
 
         EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
         EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
@@ -211,9 +214,11 @@ export default class MapScene extends Phaser.Scene {
 
         EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
         EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
+        EventBus.on(EventsEnum.END_ROUND_AFTER, this.showScoreScreen, this)
 
         EventBus.on(EventsEnum.START_GAME, this.startGame, this)
         EventBus.on(EventsEnum.END_GAME, this.endGame, this)
+        EventBus.on(EventsEnum.END_GAME_AFTER, this.showScoreScreen, this)
 
 
         EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
@@ -501,6 +506,11 @@ export default class MapScene extends Phaser.Scene {
         } else {
             EventBus.emit(EventsEnum.END_GAME)
         }
+
+    }
+
+    private showScoreScreen() {
+        this.scene.launch(ScenesEnum.SCORE, this.playerInfo)
     }
 
     private drawScore() {
@@ -576,7 +586,7 @@ export default class MapScene extends Phaser.Scene {
         EventBus.emit(EventsEnum.END_GAME_AFTER)
     }
 
-    private onCloseGame(){
+    private onCloseGame() {
         this.scene.stop(ScenesEnum.SCORE)
         this.scene.stop(ScenesEnum.MAP_CONTROLS)
         this.scene.stop(ScenesEnum.MAP)
