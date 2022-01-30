@@ -1,4 +1,5 @@
 import {GroundsEnum} from "../enums/grounds.enum";
+import {ArtifactsEnum} from "../enums/artifacts.enum";
 
 export interface PlayerInfo {
 
@@ -31,4 +32,7 @@ export interface PlayerInfo {
     readyTouch: boolean
 
     gameEnd: boolean;
+
+    artifactConnected: Map<ArtifactsEnum, number>
+
 }

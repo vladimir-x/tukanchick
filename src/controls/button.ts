@@ -27,9 +27,10 @@ export class Button extends Image {
         return this
     }
 
-    setTextFont(size: number, color: string) {
+    setTextFont(size: number, color: string, fontStyle?: string) {
         this.textGO?.setFontSize(size)
         this.textGO?.setColor(color)
+        this.textGO?.setFontStyle(fontStyle)
         return this
     }
 

@@ -22,4 +22,6 @@ export enum Assets {
 
     SCORES_IMAGE = "assets/scores.png",
 
+    CONTROLS_INFO = "assets/controls.info.json",
+
 }

@@ -18,6 +18,8 @@ export class Image {
 
         this.textureKey = texture
         this.scene.load.image(texture, this.textureKey);
+
+        return this
     }
 
     preloadAtlas(textureAtlasImagePath: string, textureAtlasJsonPath: string) {
@@ -25,6 +27,17 @@ export class Image {
 
         this.textureAtlas = textureAtlasImagePath
         this.scene.load.atlas(textureAtlasImagePath, textureAtlasImagePath, textureAtlasJsonPath);
+        return this
+    }
+
+    /**
+     * Атлас текстур уже был подгружен
+     */
+    preloadAtlasExtern(textureAtlasImagePath: string) {
+        this.imageType = ImageType.ATLAS
+
+        this.textureAtlas = textureAtlasImagePath
+        return this
     }
 
     create(x: number, y: number) {

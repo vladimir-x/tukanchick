@@ -51,7 +51,6 @@ export default class MapScene extends Phaser.Scene {
     // индекс сети, гекс-стартовый город
     roadNets: Map<number, Hexagon>
 
-    artifactConnected: Map<ArtifactsEnum, number>
 
     townByLetter: Map<TownLetters, Hexagon[]>
     townLetterConnected: Set<TownLetters>
@@ -103,7 +102,6 @@ export default class MapScene extends Phaser.Scene {
 
         this.roadNets = new Map()
 
-        this.artifactConnected = new Map()
 
         const mapInfo: MapInfo = this.cache.json.get("info")
 
@@ -242,7 +240,8 @@ export default class MapScene extends Phaser.Scene {
             deckSize: 0,
             gameEnd: false,
             readyTouch: false,
-            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
+            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: [],
+            artifactConnected: new Map()
         }
     }
 
@@ -408,8 +407,8 @@ export default class MapScene extends Phaser.Scene {
 
     private checkNewArtifact(hex: Hexagon) {
         if (hex.artifact && !hex.artifactConnected && this.isObject(hex.artifact)) {
-            const prev = this.artifactConnected.get(hex.artifact) || 0
-            this.artifactConnected.set(hex.artifact, prev + 1)
+            const prev = this.playerInfo.artifactConnected.get(hex.artifact) || 0
+            this.playerInfo.artifactConnected.set(hex.artifact, prev + 1)
             this.markAsConnected(hex.index)
 
             EventBus.emit(EventsEnum.CONNECT_ARTIFACT, hex)
@@ -419,7 +418,7 @@ export default class MapScene extends Phaser.Scene {
     private onConnectArtifact(hex: Hexagon) {
 
         this.drawArtifactFound(hex.artifact)
-        if (this.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
+        if (this.playerInfo.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
             // выдать дополнительную дорогу
             EventBus.emit(EventsEnum.BONUS_ROAD)
         }
@@ -433,7 +432,7 @@ export default class MapScene extends Phaser.Scene {
 
         this.graphics.lineStyle(4, 0x00ff00, 1);
 
-        const conCount = this.artifactConnected.get(artifact)
+        const conCount = this.playerInfo.artifactConnected.get(artifact)
         const points = this.artifactMapZones.get(artifact)?.points
 
         if (conCount > 0 && points && points.length > 0) {
@@ -527,7 +526,7 @@ export default class MapScene extends Phaser.Scene {
         let currentScore = 0
 
         //артефакты
-        this.artifactConnected.forEach((count, artifact) => {
+        this.playerInfo.artifactConnected.forEach((count, artifact) => {
 
             if (this.isObject(artifact)) {
 
