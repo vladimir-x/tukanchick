@@ -23,6 +23,5 @@ export enum EventsEnum {
 
     MESSAGE = "MESSAGE",
 
-    START_CAMERA_MOVE = "START_CAMERA_MOVE",
-    STOP_CAMERA_MOVE = "STOP_CAMERA_MOVE",
+    CLOSE_GAME = "CLOSE_GAME",
 }

@@ -7,6 +7,14 @@ export class EventBus {
 
     public static clear() {
         EventBus.emitter.destroy()
+
+        /*
+        for (let e in EventsEnum) {
+            EventBus.on(e as EventsEnum, (event: any) => {
+                console.log("EVENT >>>", e)
+            })
+        }
+*/
     }
 
     public static emitDelayed(scene: Phaser.Scene, delay: number = 1, event: EventsEnum, ...args: any[]) {

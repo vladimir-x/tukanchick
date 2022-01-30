@@ -54,8 +54,6 @@ export default class MapCamera {
 
                 beforeX = camera.scrollX
                 beforeY = camera.scrollY
-
-                EventBus.emit(EventsEnum.START_CAMERA_MOVE)
             }
 
         })
@@ -73,14 +71,12 @@ export default class MapCamera {
                 } else {
                     this.dragging = false
                     touchCount = 0
-                    EventBus.emit(EventsEnum.STOP_CAMERA_MOVE)
                 }
             }
         })
         scene.input.on("pointerup", (pointer: Pointer) => {
             this.dragging = false
             touchCount = 0
-            EventBus.emit(EventsEnum.STOP_CAMERA_MOVE)
         })
         scene.input.on('wheel', (pointer: Pointer, currentlyOver: any, dx: any, dy: any, dz: any, event: any) => {
             this.scaleByScroll(dy)

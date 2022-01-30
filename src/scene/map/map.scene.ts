@@ -20,6 +20,7 @@ import {TownLetters} from "../../enums/townLetters";
 import {TownMapZone} from "../../entity/townMapZone";
 import MapCamera from "./camera";
 import {EventBus} from "../bus/EventBus";
+import {getRandom} from "./map.util";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -64,29 +65,20 @@ export default class MapScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAP);
 
-        EventBus.clear()
-
         this.scoreZones = []
         for (const z in ScoreZonesEnum) {
             this.scoreZones[z] = new Button(this)
         }
 
-
-        for (let e in EventsEnum) {
-            EventBus.on(e as EventsEnum, (event: any) => {
-                console.log("EVENT >>>", e)
-            })
-        }
-
     }
 
     preload() {
+        EventBus.clear()
 
         this.mapConfig = this.getConfigOrDefault()
 
         this.textures.remove("map")
-        this.cache.json.remove("hexagons")
-        this.cache.json.remove("mapzones")
+        this.cache.json.remove("info")
 
         switch (this.mapConfig.island) {
             case IslandEnum.PETIT:
@@ -207,10 +199,11 @@ export default class MapScene extends Phaser.Scene {
 
         //----
 
-        this.playerInfo = this.initPlayer("PLAYER")
-
+        this.playerInfo = this.initPlayer("PLAYER_" + getRandom(10))
 
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
+
+        this.scene.launch(ScenesEnum.SCORE, this.playerInfo)
 
         EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
         EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
@@ -228,6 +221,8 @@ export default class MapScene extends Phaser.Scene {
         EventBus.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
 
 
+        EventBus.on(EventsEnum.CLOSE_GAME, this.onCloseGame, this)
+
         //----
         EventBus.emit(EventsEnum.START_GAME)
     }
@@ -239,7 +234,10 @@ export default class MapScene extends Phaser.Scene {
 
     private initPlayer(name: string): PlayerInfo {
         return {
-            deckSize: 0, name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
+            deckSize: 0,
+            gameEnd: false,
+            readyTouch: false,
+            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: []
         }
     }
 
@@ -498,15 +496,9 @@ export default class MapScene extends Phaser.Scene {
 
         this.drawScore()
 
-        alert('END ROUND !!!')
-
-        EventBus.emit(EventsEnum.END_ROUND_AFTER)
-
         if (this.playerInfo.round < this.mapConfig.roundCount) {
-            EventBus.emit(EventsEnum.START_ROUND)
+            EventBus.emit(EventsEnum.END_ROUND_AFTER)
         } else {
-
-
             EventBus.emit(EventsEnum.END_GAME)
         }
     }
@@ -576,10 +568,20 @@ export default class MapScene extends Phaser.Scene {
 
     private endGame() {
 
+        this.playerInfo.gameEnd = true
+
         this.calculateTotalScore()
         this.drawScore()
 
-        alert('END GAME !!!')
+        EventBus.emit(EventsEnum.END_GAME_AFTER)
+    }
+
+    private onCloseGame(){
+        this.scene.stop(ScenesEnum.SCORE)
+        this.scene.stop(ScenesEnum.MAP_CONTROLS)
+        this.scene.stop(ScenesEnum.MAP)
+
+        this.scene.start(ScenesEnum.MAIN_MENU)
     }
 
     private hexagonCenter(hexagon: Hexagon): Vector2Like {
@@ -641,15 +643,10 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private getConfigOrDefault(): MapConfig {
-
         const res = this.scene.settings.data as MapConfig;
-        if (res.island) {
-            return res
-        } else {
-            return {
-                island: IslandEnum.PETIT,
-                roundCount: 2
-            }
+        return res.island ? res : {
+            island: IslandEnum.PETIT,
+            roundCount: 2
         }
     }
 }

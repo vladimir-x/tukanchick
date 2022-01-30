@@ -4,4 +4,6 @@ export enum ScenesEnum {
     MAP = "MAP",
 
     MAP_CONTROLS = "MAP_CONTROLS",
+
+    SCORE = "SCORE",
 }

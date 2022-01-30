@@ -28,5 +28,7 @@ export interface PlayerInfo {
 
     scores: number[]
 
-    readyTouch?: boolean
+    readyTouch: boolean
+
+    gameEnd: boolean;
 }
