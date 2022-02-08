@@ -5,6 +5,8 @@ import {Button} from "../../controls/button";
 import {Assets} from "../../assets";
 import {MapConfig} from "../../entity/mapConfig";
 import {Image} from "../../controls/image";
+import {client} from "../../index";
+import {LobbyConfig} from "../../entity/lobbyConfig";
 
 export default class MainMenuScene extends Phaser.Scene {
 
@@ -15,12 +17,18 @@ export default class MainMenuScene extends Phaser.Scene {
     petitButton: Button
     grandeButton: Button
 
+
+    multiplayerButton: Button
+
     constructor() {
         super(ScenesEnum.MAIN_MENU)
 
         this.background = new Image(this)
         this.petitButton = new Button(this)
         this.grandeButton = new Button(this)
+
+        this.multiplayerButton = new Button(this)
+
     }
 
     preload() {
@@ -28,6 +36,8 @@ export default class MainMenuScene extends Phaser.Scene {
         this.background.preload(Assets.MENU_LOGO)
         this.petitButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
         this.grandeButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
+
+        this.multiplayerButton.preload(Assets.SAND_1)
     }
 
     create() {
@@ -39,18 +49,41 @@ export default class MainMenuScene extends Phaser.Scene {
         let buttonHeight = 200 * 0.5
         let buttonSpace = 10
 
-        this.petitButton.create(width * 0.5, height * 0.3,
+        // single
+
+        let petitButtonHeght = height * 0.3
+        this.petitButton.create(width * 0.5, petitButtonHeght,
             null,
             () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT, roundCount: 2} as MapConfig)
         ).changeFrame('ISLA_PETIT').setDisplaySize(buttonWidth, buttonHeight)
-            .setOrigin(0.5, 0)
+            .setOrigin(0.5)
 
-
-        this.grandeButton.create(width * 0.5, height * 0.3 + buttonHeight + buttonSpace,
+        let grandeButtonHeght = petitButtonHeght + buttonHeight + buttonSpace
+        this.grandeButton.create(width * 0.5, grandeButtonHeght,
             null,
             () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig)
         ).changeFrame('ISLA_GRANDE').setDisplaySize(buttonWidth, buttonHeight)
-            .setOrigin(0.5, 0)
+            .setOrigin(0.5)
+
+
+        let multiplayerHeight = grandeButtonHeght +( buttonHeight + buttonSpace) *2
+        this.multiplayerButton.create(width * 0.5, multiplayerHeight,
+            "MULTIPALYER",
+            () => this.scene.launch(ScenesEnum.LOBBY, {parentWidth: width, parentHeight: height} as LobbyConfig)
+        ).setDisplaySize(buttonWidth, buttonHeight)
+            .setOrigin(0.5)
+            .setTextFont(30, "black", "bold")
+            .setDisable(true)
+
+        client
+            .create(true)
+            .onOpen(() => {
+                this.multiplayerButton.setDisable(false)
+            })
+            .onClose(() => {
+                this.multiplayerButton.setDisable(true)
+            })
+
 
 
         this.add.text(0, 0, "ver " + "0.0.7").setOrigin(0).setFontSize(20).setFontStyle('bold').setColor('white')

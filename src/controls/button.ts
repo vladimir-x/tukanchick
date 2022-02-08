@@ -5,6 +5,8 @@ export class Button extends Image {
 
     textGO: Text
 
+    private _disable: boolean = false
+
     constructor(scene: Phaser.Scene) {
         super(scene)
     }
@@ -16,7 +18,9 @@ export class Button extends Image {
         }
 
         if (onClick && this.imageGO) {
-            this.imageGO.setInteractive().on("pointerup", onClick)
+            this.imageGO.setInteractive().on("pointerup", () => {
+                if (this.enable) onClick()
+            })
         }
         return this
     }
@@ -49,5 +53,29 @@ export class Button extends Image {
         this.textGO?.setAlpha(alpha)
         return this
     }
+
+
+    get disable(): boolean {
+        return this._disable;
+    }
+
+    get enable(): boolean {
+        return !this._disable;
+    }
+
+
+    setDisable(value: boolean) {
+        this._disable = value;
+        if (value){
+            this.setAlphaImage(0.5)
+            this.setAlphaText(0.5)
+        } else {
+            this.setAlphaImage(1)
+            this.setAlphaText(1)
+        }
+
+        return this
+    }
+
 
 }
