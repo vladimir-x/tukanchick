@@ -5,7 +5,7 @@ export class Button extends Image {
 
     textGO: Text
 
-    private _disable: boolean = false
+    private _disable: boolean
 
     constructor(scene: Phaser.Scene) {
         super(scene)
@@ -13,6 +13,8 @@ export class Button extends Image {
 
     create(x: number, y: number, text?: string, onClick?: Function) {
         super.create(x, y)
+        this._disable = false
+
         if (text) {
             this.textGO = this.scene.add.text(x, y, text).setOrigin(0, 0);
         }

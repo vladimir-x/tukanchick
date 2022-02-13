@@ -7,7 +7,7 @@ export default class Client {
 
     events: Map<string, Function[]>
 
-    receiveEvents: Map<string, Function>
+    receiveEvents: Map<string, (data: BaseDto) => any>
 
     constructor() {
         this.events = new Map()
@@ -35,7 +35,7 @@ export default class Client {
 
             self.events.get("open").forEach(fn => fn(e))
         };
-        this.socket.onmessage = function (event) {
+        this.socket.onmessage = function (event: MessageEvent<BaseDto>) {
             console.log("[socket received]", event.data);
 
             self.receiveEvents.forEach((fn, command) => self.execIfCommandEq(command, event.data, fn))
@@ -83,7 +83,7 @@ export default class Client {
     /**
      * Вешает толко одно событие на одну комманду
      */
-    onReceive(command: CommandsEnum, fn: Function) {
+    onReceive(command: CommandsEnum, fn: (data: BaseDto) => any) {
         this.receiveEvents.set(command, fn)
         return this
     }
@@ -93,7 +93,11 @@ export default class Client {
         return this
     }
 
-    send(message: Message) {
+    send(command: CommandsEnum, data?: BaseDto) {
+        this.sendMsg({command, data} as Message)
+    }
+
+    sendMsg(message: Message) {
         if (this.socket) {
             this.socket.send(JSON.stringify(message))
             console.log("[socket send]", message);
@@ -101,8 +105,8 @@ export default class Client {
         return this
     }
 
-    execIfCommandEq(command: string, data: any, fn: Function) {
-        const json: Message = JSON.parse(data)
+    execIfCommandEq(command: string, data: BaseDto, fn: (data: BaseDto) => any) {
+        const json: Message = JSON.parse(data as string)
         if (!command || command == json.command) {
             fn(json.data)
         }

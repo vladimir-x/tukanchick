@@ -5,8 +5,8 @@ import {Assets} from "../../assets";
 import {client} from "../../index";
 import {LobbyConfig} from "../../entity/lobbyConfig";
 import {Input} from "../../controls/input";
-import {Message} from "../../multiplayer/message";
 import {CommandsEnum} from "../../multiplayer/commands.enum";
+import {Table} from "../../controls/Table";
 
 export default class LobbyScene extends Phaser.Scene {
 
@@ -23,6 +23,8 @@ export default class LobbyScene extends Phaser.Scene {
     joinLobbyCaptionText: Button
     joinLobbyIdTextBox: Input
 
+    partyMemberTable: Table
+
     exitButton: Button
 
     constructor() {
@@ -38,6 +40,8 @@ export default class LobbyScene extends Phaser.Scene {
         this.createdLobbyIdText = new Button(this)
         this.joinLobbyCaptionText = new Button(this)
         this.joinLobbyIdTextBox = new Input(this)
+
+        this.partyMemberTable = new Table(this)
 
 
         this.exitButton = new Button(this)
@@ -121,7 +125,15 @@ export default class LobbyScene extends Phaser.Scene {
         this.joinLobbyCaptionText.create(leftColumnCenterX, textLobbyIdPosY, "JOIN TO ").setTextFont(30, 'white', 'bold').setOrigin(0.5)
         this.joinLobbyIdTextBox.create(rightColumnCenterX, textLobbyIdPosY, buttonWidth, buttonHeight, 'white', 'SlateGray').setOrigin(0.5)
 
+        // party members
         let exitButtonPosY = botY - buttonHeight
+
+        let partyMemberTablePosY = textLobbyIdPosY + buttonHeight + buttonSpace
+        let partyMemberTableHeight = exitButtonPosY - partyMemberTablePosY - buttonHeight
+
+        this.partyMemberTable.create(centerX, partyMemberTablePosY, width, partyMemberTableHeight).setOrigin(0.5, 0)
+
+
         this.exitButton.create(centerX, exitButtonPosY,
             "EXIT", () => this.exit()
         ).setDisplaySize(buttonWidth, buttonHeight)
@@ -132,48 +144,80 @@ export default class LobbyScene extends Phaser.Scene {
         this.scene.pause(ScenesEnum.MAIN_MENU) // переделать на popup panel
 
 
-        client.onReceive(CommandsEnum.CREATE_LOBBY_SUCCESS, (data: any) => this.createLobbySuccess(data))
-        client.onReceive(CommandsEnum.JOIN_TO_LOBBY_SUCCESS, (data: any) => this.joinLobbySuccess(data))
-        client.onReceive(CommandsEnum.JOIN_PARTY_MEMBER_SUCCESS, (data: any) => this.joinPartyMemberSuccess(data))
+        client.onReceive(CommandsEnum.CREATE_LOBBY_SUCCESS, (data) => this.createLobbySuccess(data))
+        client.onReceive(CommandsEnum.JOIN_TO_LOBBY_SUCCESS, (data) => this.joinLobbySuccess(data))
+        client.onReceive(CommandsEnum.JOIN_PARTY_MEMBER_SUCCESS, (data) => this.joinPartyMemberSuccess(data))
+        client.onReceive(CommandsEnum.LEAVE_PARTY_MEMBER_SUCCESS, (data) => this.leavePartyMemberSuccess(data))
+        client.onReceive(CommandsEnum.CLOSE_LOBBY_SUCCESS, () => this.closeLobbySuccess())
     }
 
     update() {
     }
 
     createLobby() {
-        client.send({command: CommandsEnum.CREATE_LOBBY} as Message)
+        const name = this.nicknameTextBox.getText()
+        client.send(CommandsEnum.CREATE_LOBBY, {name} as MemberDto)
     }
 
-    createLobbySuccess(data: any) {
-        const lobbyId = data
-        this.createdLobbyIdText.setText(`HOST LOBBY ID: ${lobbyId}`).setVisible(true)
+    createLobbySuccess(lobbyDto: JoinToLobbyDto) {
+        this.createdLobbyIdText.setText(`HOST LOBBY ID: ${lobbyDto.lobbyId}`).setVisible(true)
         this.disableControlsAfterJoin()
+        this.refreshLobbyMembers(lobbyDto)
     }
 
     joinLobby() {
         const lobbyId = this.joinLobbyIdTextBox.getText()
-        client.send({command: CommandsEnum.JOIN_TO_LOBBY, data: lobbyId} as Message)
+        const name = this.nicknameTextBox.getText()
+        client.send(CommandsEnum.JOIN_TO_LOBBY,
+            {
+                lobbyId,
+                member: {name} as MemberDto
+            } as JoinToLobbyDto
+        )
     }
 
-    joinLobbySuccess(data: any) {
-        const lobbyId = data
-        this.createdLobbyIdText.setText(`JOIN SUCCESS: ${lobbyId}`).setVisible(true)
+    joinLobbySuccess(lobbyDto: LobbyDto) {
+        this.createdLobbyIdText.setText(`JOIN SUCCESS: ${lobbyDto.lobbyId}`).setVisible(true)
         this.disableControlsAfterJoin()
+        this.refreshLobbyMembers(lobbyDto)
     }
 
-    joinPartyMemberSuccess(data: any) {
-        alert('new member income !')
+    joinPartyMemberSuccess(lobbyDto: LobbyDto) {
+        this.refreshLobbyMembers(lobbyDto)
     }
 
-    disableControlsAfterJoin(){
+    leavePartyMemberSuccess(lobbyDto: LobbyDto) {
+        this.refreshLobbyMembers(lobbyDto)
+    }
+
+    closeLobbySuccess() {
+        this.exit()
+    }
+
+    disableControlsAfterJoin() {
         this.createLobbyButton.setDisable(true)
         this.joinLobbyButton.setDisable(true)
         this.joinLobbyCaptionText.setVisible(false)
         this.joinLobbyIdTextBox.setVisible(false)
     }
 
+    refreshLobbyMembers(lobbyDto: LobbyDto) {
+        const stringData: string[][] = []
+
+        lobbyDto.members.forEach((m)=>{
+            const line: string[] = []
+            line.push(m.name)
+            line.push("READY")
+
+            stringData.push(line)
+        })
+
+        this.partyMemberTable.setData(stringData)
+    }
+
+
     exit() {
-        client.send({command: CommandsEnum.CLOSE_LOBBY} as Message)
+        client.send(CommandsEnum.CLOSE_MULTIPLAYER)
         this.scene.stop(ScenesEnum.LOBBY)
         this.scene.resume(ScenesEnum.MAIN_MENU)
     }
