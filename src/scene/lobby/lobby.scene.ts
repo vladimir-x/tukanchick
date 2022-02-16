@@ -25,6 +25,8 @@ export default class LobbyScene extends Phaser.Scene {
 
     partyMemberTable: Table
 
+    startPetitButton: Button
+    startGrandeButton: Button
     exitButton: Button
 
     constructor() {
@@ -44,6 +46,8 @@ export default class LobbyScene extends Phaser.Scene {
         this.partyMemberTable = new Table(this)
 
 
+        this.startPetitButton = new Button(this)
+        this.startGrandeButton = new Button(this)
         this.exitButton = new Button(this)
     }
 
@@ -54,6 +58,8 @@ export default class LobbyScene extends Phaser.Scene {
         this.createLobbyButton.preload(Assets.SAND_1)
         this.joinLobbyButton.preload(Assets.SAND_1)
 
+        this.startPetitButton.preload(Assets.SAND_1)
+        this.startGrandeButton.preload(Assets.SAND_1)
         this.exitButton.preload(Assets.SAND_1)
 
     }
@@ -134,9 +140,30 @@ export default class LobbyScene extends Phaser.Scene {
         this.partyMemberTable.create(centerX, partyMemberTablePosY, width, partyMemberTableHeight).setOrigin(0.5, 0)
 
 
-        this.exitButton.create(centerX, exitButtonPosY,
+        let thirdWidth = width / 3
+
+        let bottomButtonWidth = thirdWidth - buttonSpace * 3
+
+        let startPetitCenterPosX = leftX + thirdWidth - thirdWidth / 2
+        this.startPetitButton.create(startPetitCenterPosX, exitButtonPosY,
+            "START PETIT", () => this.startPetit()
+        ).setDisplaySize(bottomButtonWidth, buttonHeight)
+            .setOrigin(0.5)
+            .setTextFont(30, "black", "bold")
+            .setVisible(false)
+
+        let startGrandeCenterPosX = leftX + thirdWidth * 2 - thirdWidth / 2
+        this.startGrandeButton.create(startGrandeCenterPosX, exitButtonPosY,
+            "START GRANDE", () => this.startGrande()
+        ).setDisplaySize(bottomButtonWidth, buttonHeight)
+            .setOrigin(0.5)
+            .setTextFont(30, "black", "bold")
+            .setVisible(false)
+
+        let exitCenterPosX = leftX + width - thirdWidth / 2
+        this.exitButton.create(exitCenterPosX, exitButtonPosY,
             "EXIT", () => this.exit()
-        ).setDisplaySize(buttonWidth, buttonHeight)
+        ).setDisplaySize(bottomButtonWidth, buttonHeight)
             .setOrigin(0.5)
             .setTextFont(30, "black", "bold")
 
@@ -163,6 +190,7 @@ export default class LobbyScene extends Phaser.Scene {
         this.createdLobbyIdText.setText(`HOST LOBBY ID: ${lobbyDto.lobbyId}`).setVisible(true)
         this.disableControlsAfterJoin()
         this.refreshLobbyMembers(lobbyDto)
+        this.enableHostControls()
     }
 
     joinLobby() {
@@ -194,6 +222,12 @@ export default class LobbyScene extends Phaser.Scene {
         this.exit()
     }
 
+    enableHostControls() {
+        this.startPetitButton.setVisible(true)
+        this.startGrandeButton.setVisible(true)
+
+    }
+
     disableControlsAfterJoin() {
         this.createLobbyButton.setDisable(true)
         this.joinLobbyButton.setDisable(true)
@@ -204,7 +238,7 @@ export default class LobbyScene extends Phaser.Scene {
     refreshLobbyMembers(lobbyDto: LobbyDto) {
         const stringData: string[][] = []
 
-        lobbyDto.members.forEach((m)=>{
+        lobbyDto.members.forEach((m) => {
             const line: string[] = []
             line.push(m.name)
             line.push("READY")
@@ -220,5 +254,13 @@ export default class LobbyScene extends Phaser.Scene {
         client.send(CommandsEnum.CLOSE_MULTIPLAYER)
         this.scene.stop(ScenesEnum.LOBBY)
         this.scene.resume(ScenesEnum.MAIN_MENU)
+    }
+
+    startPetit() {
+        console.log('lobby startPetit')
+    }
+
+    startGrande() {
+        console.log('lobby startPetit')
     }
 }
