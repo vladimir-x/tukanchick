@@ -3,9 +3,8 @@ import {IslandEnum} from "../../enums/islands.enum";
 import {ScenesEnum} from "../../enums/scenes.enum";
 import {Button} from "../../controls/button";
 import {Assets} from "../../assets";
-import {MapConfig} from "../../entity/mapConfig";
 import {Image} from "../../controls/image";
-import {client} from "../../index";
+import {client, startSinglePlayer} from "../../index";
 import {LobbyConfig} from "../../entity/lobbyConfig";
 
 export default class MainMenuScene extends Phaser.Scene {
@@ -54,19 +53,19 @@ export default class MainMenuScene extends Phaser.Scene {
         let petitButtonHeght = height * 0.3
         this.petitButton.create(width * 0.5, petitButtonHeght,
             null,
-            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.PETIT, roundCount: 2} as MapConfig)
+            () => startSinglePlayer(this, IslandEnum.PETIT)
         ).changeFrame('ISLA_PETIT').setDisplaySize(buttonWidth, buttonHeight)
             .setOrigin(0.5)
 
         let grandeButtonHeght = petitButtonHeght + buttonHeight + buttonSpace
         this.grandeButton.create(width * 0.5, grandeButtonHeght,
             null,
-            () => this.scene.start(ScenesEnum.MAP, {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig)
+            () => startSinglePlayer(this, IslandEnum.GRANDE)
         ).changeFrame('ISLA_GRANDE').setDisplaySize(buttonWidth, buttonHeight)
             .setOrigin(0.5)
 
 
-        let multiplayerHeight = grandeButtonHeght +( buttonHeight + buttonSpace) *2
+        let multiplayerHeight = grandeButtonHeght + (buttonHeight + buttonSpace) * 2
         this.multiplayerButton.create(width * 0.5, multiplayerHeight,
             "MULTIPALYER",
             () => this.scene.launch(ScenesEnum.LOBBY, {parentWidth: width, parentHeight: height} as LobbyConfig)
@@ -76,14 +75,13 @@ export default class MainMenuScene extends Phaser.Scene {
             .setDisable(true)
 
         client
-            .create(true)
+            .connect()
             .onOpen(() => {
                 this.multiplayerButton.setDisable(false)
             })
             .onClose(() => {
                 this.multiplayerButton.setDisable(true)
             })
-
 
 
         this.add.text(0, 0, "ver " + "0.0.7").setOrigin(0).setFontSize(20).setFontStyle('bold').setColor('white')

@@ -1,4 +1,7 @@
 export enum EventsEnum {
+    INITIALIZE_MAP_AFTER = "INITIALIZE_MAP_AFTER",
+
+
     START_GAME = "START_GAME",
     END_GAME = "END_GAME",
     END_GAME_AFTER = "END_GAME_AFTER",

@@ -6,6 +6,13 @@ import ScoreScene from "./scene/map/score.scene";
 import ControlsScene from "./scene/map/controls.scene";
 import Client from "./multiplayer/client";
 import LobbyScene from "./scene/lobby/lobby.scene";
+import {Director} from "./director/director";
+import {IslandEnum} from "./enums/islands.enum";
+import {SinglePlayDirector} from "./director/single-play-director";
+import {MapConfig} from "./entity/mapConfig";
+import {MultiPlayDirector} from "./director/multi-play-director";
+import {EventBus} from "./scene/bus/EventBus";
+import {EventsEnum} from "./enums/events.enum";
 
 const config = {
     type: Phaser.AUTO,
@@ -30,3 +37,26 @@ export const game = new Phaser.Game(config);
 
 export const client = new Client()
 
+export let director: Director = null
+
+export function startSinglePlayer(scene: Phaser.Scene, island: IslandEnum) {
+
+    director = new SinglePlayDirector(scene.scene)
+
+    switch (island) {
+        case IslandEnum.PETIT:
+            director.mapConfig = {island: IslandEnum.PETIT, roundCount: 2} as MapConfig
+            break;
+        case IslandEnum.GRANDE:
+            director.mapConfig = {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig
+            break;
+
+    }
+    EventBus.emit(EventsEnum.START_GAME)
+}
+
+
+export function startMultiPlayer(scene: Phaser.Scene) {
+
+    director = new MultiPlayDirector(scene.scene)
+}

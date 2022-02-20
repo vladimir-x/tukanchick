@@ -72,7 +72,6 @@ export default class MapScene extends Phaser.Scene {
     }
 
     preload() {
-        EventBus.clear()
 
         this.mapConfig = this.getConfigOrDefault()
 
@@ -214,7 +213,6 @@ export default class MapScene extends Phaser.Scene {
         EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
         EventBus.on(EventsEnum.END_ROUND_AFTER, this.showScoreScreen, this)
 
-        EventBus.on(EventsEnum.START_GAME, this.startGame, this)
         EventBus.on(EventsEnum.END_GAME, this.endGame, this)
         EventBus.on(EventsEnum.END_GAME_AFTER, this.showScoreScreen, this)
 
@@ -227,7 +225,7 @@ export default class MapScene extends Phaser.Scene {
         EventBus.on(EventsEnum.CLOSE_GAME, this.onCloseGame, this)
 
         //----
-        EventBus.emit(EventsEnum.START_GAME)
+        EventBus.emit(EventsEnum.INITIALIZE_MAP_AFTER)
     }
 
     update(time: number, delta: number) {
@@ -571,9 +569,6 @@ export default class MapScene extends Phaser.Scene {
     }
 
 
-    private startGame() {
-        EventBus.emit(EventsEnum.START_ROUND)
-    }
 
     private endGame() {
 
