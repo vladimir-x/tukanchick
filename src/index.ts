@@ -43,16 +43,17 @@ export function startSinglePlayer(scene: Phaser.Scene, island: IslandEnum) {
 
     director = new SinglePlayDirector(scene.scene)
 
+    let mapConfig: MapConfig
     switch (island) {
         case IslandEnum.PETIT:
-            director.mapConfig = {island: IslandEnum.PETIT, roundCount: 2} as MapConfig
+            mapConfig = {island: IslandEnum.PETIT, roundCount: 2} as MapConfig
             break;
         case IslandEnum.GRANDE:
-            director.mapConfig = {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig
+            mapConfig = {island: IslandEnum.GRANDE, roundCount: 3} as MapConfig
             break;
 
     }
-    EventBus.emit(EventsEnum.START_GAME)
+    EventBus.emit(EventsEnum.START_GAME, mapConfig)
 }
 
 

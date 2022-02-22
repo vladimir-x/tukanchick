@@ -17,18 +17,9 @@ export abstract class Director {
         EventBus.on(EventsEnum.INITIALIZE_MAP_AFTER, this.initializeMapAfter, this)
     }
 
-
-    get mapConfig(): MapConfig {
-        return this._mapConfig;
-    }
-
-    set mapConfig(value: MapConfig) {
-        this._mapConfig = value;
-    }
-
     protected initializeMapAfter() {
     }
 
-    protected startGame() {
+    protected startGame(mapConfig: MapConfig) {
     }
 }

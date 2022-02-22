@@ -9,13 +9,10 @@ import {LobbyConfig} from "../../entity/lobbyConfig";
 
 export default class MainMenuScene extends Phaser.Scene {
 
-
     background: Image
-
 
     petitButton: Button
     grandeButton: Button
-
 
     multiplayerButton: Button
 

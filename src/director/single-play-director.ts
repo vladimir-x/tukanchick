@@ -2,6 +2,7 @@ import {Director} from "./director";
 import {EventBus} from "../scene/bus/EventBus";
 import {EventsEnum} from "../enums/events.enum";
 import {ScenesEnum} from "../enums/scenes.enum";
+import {MapConfig} from "../entity/mapConfig";
 
 export class SinglePlayDirector extends Director {
 
@@ -11,8 +12,8 @@ export class SinglePlayDirector extends Director {
 
     }
 
-    protected startGame() {
-        this.scene.start(ScenesEnum.MAP, this.mapConfig)
+    protected startGame(mapConfig: MapConfig) {
+        this.scene.start(ScenesEnum.MAP, mapConfig)
     }
 
     protected initializeMapAfter() {

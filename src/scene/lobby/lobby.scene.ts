@@ -2,11 +2,15 @@ import * as Phaser from "phaser";
 import {ScenesEnum} from "../../enums/scenes.enum";
 import {Button} from "../../controls/button";
 import {Assets} from "../../assets";
-import {client} from "../../index";
+import {client, startMultiPlayer} from "../../index";
 import {LobbyConfig} from "../../entity/lobbyConfig";
 import {Input} from "../../controls/input";
 import {CommandsEnum} from "../../multiplayer/commands.enum";
 import {Table} from "../../controls/Table";
+import {EventBus} from "../bus/EventBus";
+import {EventsEnum} from "../../enums/events.enum";
+import {IslandEnum} from "../../enums/islands.enum";
+import {MapConfig} from "../../entity/mapConfig";
 
 export default class LobbyScene extends Phaser.Scene {
 
@@ -176,6 +180,7 @@ export default class LobbyScene extends Phaser.Scene {
         client.onReceive(CommandsEnum.JOIN_PARTY_MEMBER_SUCCESS, (data) => this.joinPartyMemberSuccess(data))
         client.onReceive(CommandsEnum.LEAVE_PARTY_MEMBER_SUCCESS, (data) => this.leavePartyMemberSuccess(data))
         client.onReceive(CommandsEnum.CLOSE_LOBBY_SUCCESS, () => this.closeLobbySuccess())
+        client.onReceive(CommandsEnum.START_GAME_SUCCESS, (data) => this.startGameSuccess(data))
     }
 
     update() {
@@ -191,6 +196,7 @@ export default class LobbyScene extends Phaser.Scene {
         this.disableControlsAfterJoin()
         this.refreshLobbyMembers(lobbyDto)
         this.enableHostControls()
+        this.createDirector()
     }
 
     joinLobby() {
@@ -208,6 +214,7 @@ export default class LobbyScene extends Phaser.Scene {
         this.createdLobbyIdText.setText(`JOIN SUCCESS: ${lobbyDto.lobbyId}`).setVisible(true)
         this.disableControlsAfterJoin()
         this.refreshLobbyMembers(lobbyDto)
+        this.createDirector()
     }
 
     joinPartyMemberSuccess(lobbyDto: LobbyDto) {
@@ -220,6 +227,11 @@ export default class LobbyScene extends Phaser.Scene {
 
     closeLobbySuccess() {
         this.exit()
+    }
+
+    startGameSuccess(lobbyDto: LobbyDto) {
+        console.log('lobby startGame', lobbyDto)
+        EventBus.emit(EventsEnum.START_GAME, {island: lobbyDto.gameState.island, roundCount: lobbyDto.gameState.roundCount} as MapConfig)
     }
 
     enableHostControls() {
@@ -249,6 +261,10 @@ export default class LobbyScene extends Phaser.Scene {
         this.partyMemberTable.setData(stringData)
     }
 
+    createDirector() {
+        startMultiPlayer(this)
+    }
+
 
     exit() {
         client.send(CommandsEnum.CLOSE_MULTIPLAYER)
@@ -257,10 +273,10 @@ export default class LobbyScene extends Phaser.Scene {
     }
 
     startPetit() {
-        console.log('lobby startPetit')
+        client.send(CommandsEnum.FORCE_START, {island: IslandEnum.PETIT} as GameStateDto)
     }
 
     startGrande() {
-        console.log('lobby startPetit')
+        client.send(CommandsEnum.FORCE_START, {island: IslandEnum.GRANDE} as GameStateDto)
     }
 }
