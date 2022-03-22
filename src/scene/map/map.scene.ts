@@ -6,7 +6,6 @@ import {ScenesEnum} from "../../enums/scenes.enum";
 import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
-import Deck from "./deck";
 import {GroundsEnum} from "../../enums/grounds.enum";
 import {ArtifactsEnum} from "../../enums/artifacts.enum";
 import Vector2Like = Phaser.Types.Math.Vector2Like;
@@ -20,7 +19,8 @@ import {TownLetters} from "../../enums/townLetters";
 import {TownMapZone} from "../../entity/townMapZone";
 import MapCamera from "./camera";
 import {EventBus} from "../bus/EventBus";
-import {getRandom} from "./map.util";
+import {director} from "../../index";
+import {SinglePlayDirector} from "../../director/single-play-director";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -36,13 +36,8 @@ export default class MapScene extends Phaser.Scene {
 
     polygonGameObjects: Map<number, Phaser.GameObjects.Polygon>
 
-    playerInfo: PlayerInfo
-
     // индексы соединенных гексов
     roads: Map<number, Set<number>>
-
-    // колода кароточек с землями
-    deck: Deck
 
     // гексы при соединении перетаскиванием
     hexA: Hexagon
@@ -60,6 +55,11 @@ export default class MapScene extends Phaser.Scene {
     scoreZones: Button[]
 
     townZones: Map<TownLetters, TownMapZone>
+
+    get playerInfo(): PlayerInfo {
+        return (director as SinglePlayDirector).playerInfo
+    }
+
 
     constructor() {
         super(ScenesEnum.MAP);
@@ -200,16 +200,12 @@ export default class MapScene extends Phaser.Scene {
 
         //----
 
-        this.playerInfo = this.initPlayer("PLAYER_" + getRandom(10))
 
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
 
-        EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
         EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
-        EventBus.on(EventsEnum.END_TURN, this.endTurn, this)
 
-        EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
         EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
         EventBus.on(EventsEnum.END_ROUND_AFTER, this.showScoreScreen, this)
 
@@ -233,15 +229,6 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
-    private initPlayer(name: string): PlayerInfo {
-        return {
-            deckSize: 0,
-            gameEnd: false,
-            readyTouch: false,
-            name: name, turn: 0, round: 0, bonusRoad: 0, turnComplete: false, scores: [],
-            artifactConnected: new Map()
-        }
-    }
 
     private sameGround(a: GroundsEnum, b: GroundsEnum): boolean {
         return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER
@@ -470,27 +457,6 @@ export default class MapScene extends Phaser.Scene {
         this.graphics.strokeCircle(point.x, point.y, 45);
     }
 
-    private startTurn() {
-
-        this.playerInfo.groundA = this.deck.pop()
-        this.playerInfo.groundB = this.deck.pop()
-
-        this.playerInfo.turn++
-        this.playerInfo.turnComplete = false
-        this.playerInfo.readyTouch = true
-
-        this.playerInfo.deckSize = this.deck.size()
-
-        EventBus.emit(EventsEnum.START_TURN_AFTER)
-    }
-
-    private endTurn() {
-        if (this.deck.size() > 1) {
-            EventBus.emitDelayed(this, 300, EventsEnum.START_TURN)
-        } else {
-            EventBus.emitDelayed(this, 300, EventsEnum.END_ROUND)
-        }
-    }
 
     private endRound() {
 
@@ -558,17 +524,6 @@ export default class MapScene extends Phaser.Scene {
 
         this.playerInfo.scores[ScoreZonesEnum.TOTAL] = total
     }
-
-    private startRound() {
-        this.deck = new Deck()
-        this.playerInfo.round += 1
-        this.playerInfo.turn = 0
-
-        EventBus.emit(EventsEnum.START_ROUND_AFTER)
-        EventBus.emit(EventsEnum.START_TURN)
-    }
-
-
 
     private endGame() {
 

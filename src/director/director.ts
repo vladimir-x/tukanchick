@@ -4,7 +4,6 @@ import {MapConfig} from "../entity/mapConfig";
 
 export abstract class Director {
 
-    private _mapConfig: MapConfig
 
     constructor(protected scene: Phaser.Scenes.ScenePlugin) {
         EventBus.clear()
@@ -12,6 +11,10 @@ export abstract class Director {
 
         // начало игры
         EventBus.on(EventsEnum.START_GAME, this.startGame, this)
+
+        EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
+        EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
+        EventBus.on(EventsEnum.END_TURN, this.endTurn, this)
 
         //
         EventBus.on(EventsEnum.INITIALIZE_MAP_AFTER, this.initializeMapAfter, this)
@@ -21,5 +24,14 @@ export abstract class Director {
     }
 
     protected startGame(mapConfig: MapConfig) {
+    }
+
+    protected startRound() {
+    }
+
+    protected startTurn() {
+    }
+
+    protected endTurn() {
     }
 }
