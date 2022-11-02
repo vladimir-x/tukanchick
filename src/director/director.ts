@@ -1,6 +1,7 @@
 import {EventBus} from "../scene/bus/EventBus";
 import {EventsEnum} from "../enums/events.enum";
 import {MapConfig} from "../entity/mapConfig";
+import {Hexagon} from "../entity/hexagon";
 
 export abstract class Director {
 
@@ -15,6 +16,8 @@ export abstract class Director {
         EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
         EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
         EventBus.on(EventsEnum.END_TURN, this.endTurn, this)
+
+        EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
 
         //
         EventBus.on(EventsEnum.INITIALIZE_MAP_AFTER, this.initializeMapAfter, this)
@@ -33,5 +36,8 @@ export abstract class Director {
     }
 
     protected endTurn() {
+    }
+
+    protected makeRoad(hexes: Hexagon[]) {
     }
 }

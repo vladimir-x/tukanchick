@@ -1,13 +1,11 @@
 import * as Phaser from "phaser";
 import Pointer = Phaser.Input.Pointer;
-import Vector2Like = Phaser.Types.Math.Vector2Like;
-import {EventsEnum} from "../../enums/events.enum";
-import {EventBus} from "../bus/EventBus";
+import {Point} from "../../entity/point";
 
 export default class MapCamera {
 
-    downScale: Vector2Like[] = []
-    currScale: Vector2Like[] = []
+    downScale: Point[] = []
+    currScale: Point[] = []
 
     downZoom: number;
 
@@ -107,7 +105,7 @@ export default class MapCamera {
         this.scene.cameras.main.zoom = newZoom
     }
 
-    calcGipp(points: Vector2Like[]) {
+    calcGipp(points: Point[]) {
         const a = points[1].x - points[2].x
         const b = points[1].y - points[2].y
 

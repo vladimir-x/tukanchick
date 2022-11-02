@@ -8,7 +8,6 @@ import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
 import {GroundsEnum} from "../../enums/grounds.enum";
 import {ArtifactsEnum} from "../../enums/artifacts.enum";
-import Vector2Like = Phaser.Types.Math.Vector2Like;
 import Graphics = Phaser.GameObjects.Graphics;
 import {ArtifactMapZone} from "../../entity/artifactMapZone";
 import {MapInfo} from "../../entity/mapInfo";
@@ -21,6 +20,7 @@ import MapCamera from "./camera";
 import {EventBus} from "../bus/EventBus";
 import {director} from "../../index";
 import {SinglePlayDirector} from "../../director/single-play-director";
+import {Point} from "../../entity/point";
 
 export default class MapScene extends Phaser.Scene {
 
@@ -36,24 +36,16 @@ export default class MapScene extends Phaser.Scene {
 
     polygonGameObjects: Map<number, Phaser.GameObjects.Polygon>
 
-    // индексы соединенных гексов
-    roads: Map<number, Set<number>>
-
     // гексы при соединении перетаскиванием
     hexA: Hexagon
     hexB: Hexagon
 
-    // индекс сети, гекс-стартовый город
-    roadNets: Map<number, Hexagon>
-
-
     townByLetter: Map<TownLetters, Hexagon[]>
-    townLetterConnected: Set<TownLetters>
-
 
     //очки
     scoreZones: Button[]
 
+    //города
     townZones: Map<TownLetters, TownMapZone>
 
     get playerInfo(): PlayerInfo {
@@ -97,11 +89,6 @@ export default class MapScene extends Phaser.Scene {
 
         this.hexagons = new Map()
 
-        this.roads = new Map()
-
-        this.roadNets = new Map()
-
-
         const mapInfo: MapInfo = this.cache.json.get("info")
 
         mapInfo.hexagons.forEach((h) => this.hexagons.set(h.index, h))
@@ -123,7 +110,6 @@ export default class MapScene extends Phaser.Scene {
             this.townByLetter.set(letter as TownLetters, [])
         }
 
-        this.townLetterConnected = new Set()
 
         this.townZones = new Map()
         mapInfo.towns.forEach((z) => this.townZones.set(z.letter, z))
@@ -141,7 +127,7 @@ export default class MapScene extends Phaser.Scene {
                     const townNumber = Number(h.artifact.substring(5))
                     h.net = townNumber
                     h.townLetter = townSpawner.getByNumber(townNumber)
-                    this.roadNets.set(h.net, h)
+                    this.playerInfo.townNets.set(h.net, h.index)
 
                     this.townByLetter.get(h.townLetter).push(h)
                 }
@@ -171,7 +157,8 @@ export default class MapScene extends Phaser.Scene {
                             this.clearSelected()
                         } else if (pointer.leftButtonReleased()) {
                             this.hexB = h
-                            EventBus.emit(EventsEnum.MAKE_ROAD)
+                            EventBus.emit(EventsEnum.MAKE_ROAD, this.hexA, this.hexB)
+                            this.clearSelected()
                         }
                     })
                     .on('pointerover', (pointer: any, localX: any, localY: any) => {
@@ -204,7 +191,7 @@ export default class MapScene extends Phaser.Scene {
         this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
 
 
-        EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
+        EventBus.on(EventsEnum.DRAW_ROAD, this.drawRoad, this)
 
         EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
         EventBus.on(EventsEnum.END_ROUND_AFTER, this.showScoreScreen, this)
@@ -274,89 +261,57 @@ export default class MapScene extends Phaser.Scene {
         this.hexB = null
     }
 
-    private checkSelectedHex(): boolean {
+    private drawRoad(hexes: Hexagon[]) {
 
-        // есть ли выбор
-        if (!this.hexA || !this.hexB) {
-            return false
+        this.playerInfo.readyTouch = false
+
+        const pointA = this.hexagonCenter(hexes[0])
+        const pointB = this.hexagonCenter(hexes[1])
+
+        this.add.line(0, 0, pointA.x, pointA.y, pointB.x, pointB.y, 0xff0000).setOrigin(0, 0)
+            .setLineWidth(3, 3)
+
+        this.addToRoads(hexes[0].index, hexes[1].index)
+
+        //----
+        if (!this.playerInfo.turnComplete) {
+            this.playerInfo.turnComplete = true
+        } else {
+            this.playerInfo.bonusRoad -= 1
         }
 
-        // подходятли по картам
-        if (this.playerInfo.bonusRoad > 0) {
-            // всегда подходят
+        this.recalcRoadNet()
+        this.checkTownConnection()
+
+        //---
+        EventBus.emit(EventsEnum.MAKE_ROAD_AFTER)
+
+        //---
+        if (this.playerInfo.bonusRoad == 0) {
+            EventBus.emit(EventsEnum.END_TURN)
         } else {
-            const aa = this.sameGround(this.playerInfo.groundA, this.hexA.ground)
-            const ab = this.sameGround(this.playerInfo.groundA, this.hexB.ground)
-            const ba = this.sameGround(this.playerInfo.groundB, this.hexA.ground)
-            const bb = this.sameGround(this.playerInfo.groundB, this.hexB.ground)
-
-            if ((aa && bb) || (ab && ba)) {
-                // есть подходящая пара
-            } else {
-                return false
-            }
-        }
-
-        //проверить соседство
-        const nIndex = this.hexA.neighbours.find((n) => n === this.hexB.index)
-        return nIndex >= 0
-    }
-
-    private makeRoad() {
-
-        if (this.checkSelectedHex()) {
-
-            this.playerInfo.readyTouch = false
-
-            const pointA = this.hexagonCenter(this.hexA)
-            const pointB = this.hexagonCenter(this.hexB)
-
-            this.add.line(0, 0, pointA.x, pointA.y, pointB.x, pointB.y, 0xff0000).setOrigin(0, 0)
-                .setLineWidth(3, 3)
-
-            this.addToRoads(this.hexA.index, this.hexB.index)
-            this.clearSelected()
-
-            //----
-            if (!this.playerInfo.turnComplete) {
-                this.playerInfo.turnComplete = true
-            } else {
-                this.playerInfo.bonusRoad -= 1
-            }
-
-            this.recalcRoadNet()
-            this.checkTownConnection()
-
-            //---
-            EventBus.emit(EventsEnum.MAKE_ROAD_AFTER)
-
-            //---
-            if (this.playerInfo.bonusRoad == 0) {
-                EventBus.emit(EventsEnum.END_TURN)
-            } else {
-                this.playerInfo.readyTouch = true
-            }
-        } else {
-            this.clearSelected()
+            this.playerInfo.readyTouch = true
         }
     }
 
     private addToRoads(a: number, b: number) {
-        if (!this.roads.has(a)) {
-            this.roads.set(a, new Set())
+        if (!this.playerInfo.roads.has(a)) {
+            this.playerInfo.roads.set(a, new Set())
         }
-        if (!this.roads.has(b)) {
-            this.roads.set(b, new Set())
+        if (!this.playerInfo.roads.has(b)) {
+            this.playerInfo.roads.set(b, new Set())
         }
 
-        this.roads.get(a).add(b)
-        this.roads.get(b).add(a)
+        this.playerInfo.roads.get(a).add(b)
+        this.playerInfo.roads.get(b).add(a)
     }
 
     private recalcRoadNet() {
 
-        this.roadNets.forEach((h: Hexagon, k) => {
-            if (k == h.net) {
+        this.playerInfo.townNets.forEach((townHexId, netId) => {
+            const h = this.hexagons.get(townHexId)
+
+            if (netId == h.net) {
                 // эта часть сети ещё ни к кому не присоеденена
                 // можно запускать поиск
 
@@ -369,7 +324,7 @@ export default class MapScene extends Phaser.Scene {
                 while (queue.length > 0) {
                     let currHex = queue.pop()
 
-                    this.roads.get(currHex.index)?.forEach((conIndex) => {
+                    this.playerInfo.roads.get(currHex.index)?.forEach((conIndex) => {
                             const conHex = this.hexagons.get(conIndex)
 
                             if (!conHex.net || conHex.net > currHex.net) {
@@ -434,11 +389,12 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private checkTownConnection() {
+        const townLetterConnected = this.playerInfo.townLetterConnected
 
         this.townByLetter.forEach((towns: Hexagon[], letter: TownLetters) => {
-            if (!this.townLetterConnected.has(letter)) {
+            if (!townLetterConnected.has(letter)) {
                 if (towns[0].net && towns[0].net === towns[1].net) {
-                    this.townLetterConnected.add(letter)
+                    townLetterConnected.add(letter)
 
                     this.markAsConnected(towns[0].index)
                     this.markAsConnected(towns[1].index)
@@ -508,7 +464,7 @@ export default class MapScene extends Phaser.Scene {
         let total = 0
 
         //calc town
-        this.townLetterConnected.forEach(letter => {
+        this.playerInfo.townLetterConnected.forEach(letter => {
                 total += this.townZones.get(letter as TownLetters).score
             }
         )
@@ -543,7 +499,7 @@ export default class MapScene extends Phaser.Scene {
         this.scene.start(ScenesEnum.MAIN_MENU)
     }
 
-    private hexagonCenter(hexagon: Hexagon): Vector2Like {
+    private hexagonCenter(hexagon: Hexagon): Point {
         return {
             x: hexagon.points[0].x,
             y: hexagon.points[0].y + (hexagon.points[3].y - hexagon.points[0].y) / 2

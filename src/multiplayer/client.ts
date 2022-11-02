@@ -53,6 +53,8 @@ class WebSocketExt {
 
     socket: WebSocket
 
+    debug: boolean = false
+
     constructor(private url: string) {
         this.clearClientListeners()
         this.create()
@@ -64,21 +66,27 @@ class WebSocketExt {
 
         this.ident = Date.now()
         this.socket.onopen = (e) => {
-            console.log("[socket opened]", this.ident);
+            if (this.debug) {
+                console.log("[socket opened]", this.ident);
+            }
             this.events.get("open").forEach(fn => fn(e))
         };
         this.socket.onmessage = (event: MessageEvent<BaseDto>) => {
-            console.log("[socket received]", event.data);
+            if (this.debug)
+                console.log("[socket received]", event.data);
             this.receiveEvents.forEach((fn, command) => this.execIfCommandEq(command, event.data, fn))
         };
         this.socket.onclose = (e) => this.socketOnClose(e, true)
         this.socket.onerror = (e) => {
-            console.error("socket error");
-            console.error(e)
+            if (this.debug) {
+                console.error("socket error");
+                console.error(e)
+            }
             this.events.get("error").forEach(fn => fn(e))
         };
 
-        console.log("[socket create]", this.ident);
+        if (this.debug)
+            console.log("[socket create]", this.ident);
     }
 
     clearSocketListeners() {
@@ -106,7 +114,8 @@ class WebSocketExt {
 
 
     close() {
-        console.log("[socket closing]", this.ident);
+        if (this.debug)
+            console.log("[socket closing]", this.ident);
         this.clearSocketListeners()
         this.socket.onclose = (e) => this.socketOnClose(e, false)
         this.socket.close()
@@ -115,13 +124,15 @@ class WebSocketExt {
     }
 
     terminate() {
-        console.log("[socket terminating]", this.ident);
+        if (this.debug)
+            console.log("[socket terminating]", this.ident);
         this.clearClientListeners()
         this.close()
     }
 
     private socketOnClose(e: CloseEvent, reconnectFlag: boolean) {
-        console.log("[socket closed]", this.ident, e.code, reconnectFlag);
+        if (this.debug)
+            console.log("[socket closed]", this.ident, e.code, reconnectFlag);
         this.events.get("close").forEach(fn => fn(e))
         if (reconnectFlag) {
             this.reconnect()
@@ -140,7 +151,8 @@ class WebSocketExt {
     sendMsg(message: Message) {
         if (this.socket) {
             this.socket.send(JSON.stringify(message))
-            console.log("[socket sent]", message);
+            if (this.debug)
+                console.log("[socket sent]", message);
         }
         return this
     }

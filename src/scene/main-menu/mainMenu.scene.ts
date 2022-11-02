@@ -16,6 +16,8 @@ export default class MainMenuScene extends Phaser.Scene {
 
     multiplayerButton: Button
 
+    enableNet: boolean
+
     constructor() {
         super(ScenesEnum.MAIN_MENU)
 
@@ -24,6 +26,8 @@ export default class MainMenuScene extends Phaser.Scene {
         this.grandeButton = new Button(this)
 
         this.multiplayerButton = new Button(this)
+
+        this.enableNet = false
 
     }
 
@@ -71,14 +75,16 @@ export default class MainMenuScene extends Phaser.Scene {
             .setTextFont(30, "black", "bold")
             .setDisable(true)
 
-        client
-            .connect()
-            .onOpen(() => {
-                this.multiplayerButton.setDisable(false)
-            })
-            .onClose(() => {
-                this.multiplayerButton.setDisable(true)
-            })
+        if (this.enableNet) {
+            client
+                .connect()
+                .onOpen(() => {
+                    this.multiplayerButton.setDisable(false)
+                })
+                .onClose(() => {
+                    this.multiplayerButton.setDisable(true)
+                })
+        }
 
 
         this.add.text(0, 0, "ver " + "0.0.7").setOrigin(0).setFontSize(20).setFontStyle('bold').setColor('white')

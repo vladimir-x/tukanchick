@@ -1,11 +1,11 @@
 import {Hexagon} from "./hexagon";
 import {ArtifactMapZone} from "./artifactMapZone";
-import Vector2Like = Phaser.Types.Math.Vector2Like;
 import {TownMapZone} from "./townMapZone";
+import {Point} from "./point";
 
 export interface MapInfo {
 
-    scores: Vector2Like[]
+    scores: Point[]
 
     artifacts: ArtifactMapZone[]
 

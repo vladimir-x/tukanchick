@@ -1,11 +1,11 @@
-import Vector2Like = Phaser.Types.Math.Vector2Like;
 import {TownLetters} from "../enums/townLetters";
+import {Point} from "./point";
 
 export interface TownMapZone {
 
     letter: TownLetters
 
-    point: Vector2Like
+    point: Point
 
     score: number
 

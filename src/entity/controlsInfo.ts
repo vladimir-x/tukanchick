@@ -1,10 +1,10 @@
 import {ArtifactMapZone} from "./artifactMapZone";
-import Vector2Like = Phaser.Types.Math.Vector2Like;
 import {TownMapZone} from "./townMapZone";
+import {Point} from "./point";
 
 export interface ControlsInfo {
 
-    scores: Vector2Like[]
+    scores: Point[]
 
     artifacts: ArtifactMapZone[]
 

@@ -1,5 +1,6 @@
 import {GroundsEnum} from "../enums/grounds.enum";
 import {ArtifactsEnum} from "../enums/artifacts.enum";
+import {TownLetters} from "../enums/townLetters";
 
 export interface PlayerInfo {
 
@@ -13,26 +14,37 @@ export interface PlayerInfo {
 
     turnComplete: boolean
 
+    // выпавшие земли
     groundA?: GroundsEnum
-
     groundB?: GroundsEnum
 
+    // выделенные земли (похоже что не нужно)
     selectA?: number
-
+    selectB?: number
     selectGroundA?: GroundsEnum
-
     selectGroundB?: GroundsEnum
 
-    selectB?: number
 
     bonusRoad: number
 
     scores: number[]
 
+    // признак, что пользователь может делать соединение (не потратил ход)
     readyTouch: boolean
 
     gameEnd: boolean;
 
+    // соединённые артефакты:  ТипАртефакта-Количество соединенных
     artifactConnected: Map<ArtifactsEnum, number>
+
+    // соединенные города
+    townLetterConnected: Set<TownLetters>
+
+    // индексы соединенных гексов
+    roads: Map<number, Set<number>>
+
+    // сети
+    //    индекс сети   | индекс: гекс-стартовый город
+    townNets: Map<number, number>
 
 }
