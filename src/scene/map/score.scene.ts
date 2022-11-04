@@ -106,7 +106,6 @@ export default class ScoreScene extends Phaser.Scene {
 
     onNext() {
 
-        console.log(">>call onNext() !!!")
         this.scene.setVisible(false);
 
         if (this.playerInfo.gameEnd){

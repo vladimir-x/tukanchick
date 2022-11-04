@@ -109,9 +109,9 @@ export default class ControlsScene extends Phaser.Scene {
         this.roundCount.create(0, 50, "ROUND_COUNT").setDisplaySize(80, 50).setTextFont(40, "black")
 
         this.nextTurnLabel.create(controlPanelWidth, 0, "END-TURN")
-            .setOrigin(1,0).setDisplaySize(100, 50).setTextFont(20, "red")
+            .setOrigin(1, 0).setDisplaySize(100, 50).setTextFont(20, "red")
         this.turnCount.create(controlPanelWidth, 50, "TURN")
-            .setOrigin(1,0).setDisplaySize(100, 50).setTextFont(40, "red")
+            .setOrigin(1, 0).setDisplaySize(100, 50).setTextFont(40, "red")
 
         this.deckSizeCount.create(centerX, 0, "_")
             .setOrigin(0.5, 0).setTextFont(40, "green", "bold")
@@ -155,6 +155,7 @@ export default class ControlsScene extends Phaser.Scene {
 
         EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
         EventBus.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
+        EventBus.on(EventsEnum.BONUS_ROAD, this.updateRoadCounter, this)
 
         let number = 0
         let messageLog = ''
@@ -201,7 +202,7 @@ export default class ControlsScene extends Phaser.Scene {
     }
 
     private onConnectArtifact(hex: Hexagon) {
-        const connectedNumber = this.playerInfo.artifactConnected.get(hex.artifact)-1
+        const connectedNumber = this.playerInfo.artifactConnected.get(hex.artifact) - 1
         this.artifactZones.get(hex.artifact + connectedNumber).setVisible(true) // !!!
 
         this.artifactSplash.changeFrame(hex.artifact).setAlphaImage(1).setVisible(true)
@@ -210,7 +211,8 @@ export default class ControlsScene extends Phaser.Scene {
     }
 
 
-    private onConnectTown(letter: TownLetters) {
+    private onConnectTown(townHexes: Hexagon[]) {
+        const letter = townHexes[0].townLetter
         this.artifactZones.get(letter).setVisible(true)
 
         this.artifactSplash.changeFrame(`TOWN_${letter}`).setAlphaImage(1).setVisible(true)

@@ -8,8 +8,12 @@ import {getRandom} from "../scene/map/map.util";
 import Deck from "../scene/map/deck";
 import {GroundsEnum} from "../enums/grounds.enum";
 import {Hexagon} from "../entity/hexagon";
+import {ArtifactsEnum} from "../enums/artifacts.enum";
+import {TownLetters} from "../enums/townLetters";
 
 export class SinglePlayDirector extends Director {
+
+    mapConfig: MapConfig
 
     playerInfo: PlayerInfo
 
@@ -21,10 +25,13 @@ export class SinglePlayDirector extends Director {
     }
 
     protected startGame(mapConfig: MapConfig) {
-        this.scene.start(ScenesEnum.MAP, mapConfig)
 
+        this.mapConfig = mapConfig
 
         this.playerInfo = this.initPlayer("PLAYER_" + getRandom(10))
+
+        this.scene.start(ScenesEnum.MAP, mapConfig)
+
     }
 
     protected initializeMapAfter() {
@@ -70,10 +77,127 @@ export class SinglePlayDirector extends Director {
     protected makeRoad(hexes: Hexagon[]) {
 
         if (this.checkSelectedHex(hexes)) {
+
+            this.playerInfo.readyTouch = false
+
             EventBus.emit(EventsEnum.DRAW_ROAD, hexes)
 
+            this.addToRoads(hexes[0].index, hexes[1].index)
+
+            this.recalcRoadNet()
+            this.checkTownConnection()
+            //----
+            if (!this.playerInfo.turnComplete) {
+                this.playerInfo.turnComplete = true
+            } else {
+                this.playerInfo.bonusRoad -= 1
+            }
+
+
+            //---
+            if (this.playerInfo.bonusRoad == 0) {
+                EventBus.emit(EventsEnum.END_TURN)
+            } else {
+                this.playerInfo.readyTouch = true
+            }
+
+            EventBus.emit(EventsEnum.MAKE_ROAD_AFTER)
         }
 
+    }
+
+
+    private addToRoads(a: number, b: number) {
+        if (!this.playerInfo.roads.has(a)) {
+            this.playerInfo.roads.set(a, new Set())
+        }
+        if (!this.playerInfo.roads.has(b)) {
+            this.playerInfo.roads.set(b, new Set())
+        }
+
+        this.playerInfo.roads.get(a).add(b)
+        this.playerInfo.roads.get(b).add(a)
+    }
+
+    private recalcRoadNet() {
+
+        this.playerInfo.townNets.forEach((townHexId, netId) => {
+            const h = this.playerInfo.hexagons.get(townHexId)
+
+            if (netId == h.net) {
+                // эта часть сети ещё ни к кому не присоеденена
+                // можно запускать поиск
+
+                const queue = []
+
+                const visited = new Set<number>()
+                queue.push(h)
+                visited.add(h.index)
+
+                while (queue.length > 0) {
+                    let currHex = queue.pop()
+
+                    this.playerInfo.roads.get(currHex.index)?.forEach((conIndex) => {
+                            const conHex = this.playerInfo.hexagons.get(conIndex)
+
+                            if (!conHex.net || conHex.net > currHex.net) {
+
+                                //регистрация коннекта артефакта
+                                this.checkNewArtifact(conHex)
+
+                                conHex.net = currHex.net
+                                queue.push(conHex)
+                            } else if (conHex.net === currHex.net && !visited.has(conIndex)) {
+                                visited.add(conIndex)
+                                queue.push(conHex)
+                            }
+                        }
+                    )
+                }
+            }
+        })
+    }
+
+    private checkNewArtifact(hex: Hexagon) {
+        if (hex.artifact && !hex.artifactConnected && this.isObject(hex.artifact)) {
+            hex.artifactConnected = true
+
+            const prev = this.playerInfo.artifactConnected.get(hex.artifact) || 0
+            this.playerInfo.artifactConnected.set(hex.artifact, prev + 1)
+
+            if (this.playerInfo.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
+                // выдать дополнительную дорогу
+                this.playerInfo.bonusRoad += 1
+                EventBus.emit(EventsEnum.BONUS_ROAD)
+            }
+
+            EventBus.emit(EventsEnum.CONNECT_ARTIFACT, hex)
+        }
+    }
+
+    private checkTownConnection() {
+        const townLetterConnected = this.playerInfo.townLetterConnected
+
+        this.playerInfo.townByLetter.forEach((towns: Hexagon[], letter: TownLetters) => {
+            if (!townLetterConnected.has(letter)) {
+                if (towns[0].net && towns[0].net === towns[1].net) {
+                    townLetterConnected.add(letter)
+                    towns[0].artifactConnected = true
+                    towns[1].artifactConnected = true
+
+                    EventBus.emit(EventsEnum.CONNECT_TOWN, towns[0], towns[1])
+                }
+            }
+        })
+    }
+
+
+    private isTown(artifact: ArtifactsEnum) {
+        return artifact?.startsWith("TOWN_")
+    }
+
+    private isObject(artifact: ArtifactsEnum) {
+        return !this.isTown(artifact)
     }
 
 
@@ -89,7 +213,9 @@ export class SinglePlayDirector extends Director {
             artifactConnected: new Map(),
             townLetterConnected: new Set(),
             roads: new Map(),
-            townNets: new Map()
+            townNets: new Map(),
+            hexagons: new Map(),
+            townByLetter: new Map(),
         }
     }
 

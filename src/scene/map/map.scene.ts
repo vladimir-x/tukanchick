@@ -26,8 +26,6 @@ export default class MapScene extends Phaser.Scene {
 
     mapConfig: MapConfig
 
-    hexagons: Map<number, Hexagon>
-
     graphics: Graphics
 
     artifactMapZones: Map<ArtifactsEnum, ArtifactMapZone>
@@ -39,8 +37,6 @@ export default class MapScene extends Phaser.Scene {
     // гексы при соединении перетаскиванием
     hexA: Hexagon
     hexB: Hexagon
-
-    townByLetter: Map<TownLetters, Hexagon[]>
 
     //очки
     scoreZones: Button[]
@@ -87,11 +83,9 @@ export default class MapScene extends Phaser.Scene {
     create() {
         const map = this.add.image(0, 0, "map").setOrigin(0, 0)
 
-        this.hexagons = new Map()
-
         const mapInfo: MapInfo = this.cache.json.get("info")
 
-        mapInfo.hexagons.forEach((h) => this.hexagons.set(h.index, h))
+        mapInfo.hexagons.forEach((h) => this.playerInfo.hexagons.set(h.index, h))
 
         this.artifactMapZones = new Map()
 
@@ -105,9 +99,8 @@ export default class MapScene extends Phaser.Scene {
 
         const townSpawner = new TownSpawner()
 
-        this.townByLetter = new Map()
         for (let letter in TownLetters) {
-            this.townByLetter.set(letter as TownLetters, [])
+            this.playerInfo.townByLetter.set(letter as TownLetters, [])
         }
 
 
@@ -121,7 +114,7 @@ export default class MapScene extends Phaser.Scene {
 
         //----
 
-        this.hexagons.forEach((h: Hexagon, key: number) => {
+        this.playerInfo.hexagons.forEach((h: Hexagon, key: number) => {
 
                 if (this.isTown(h.artifact)) {
                     const townNumber = Number(h.artifact.substring(5))
@@ -129,7 +122,7 @@ export default class MapScene extends Phaser.Scene {
                     h.townLetter = townSpawner.getByNumber(townNumber)
                     this.playerInfo.townNets.set(h.net, h.index)
 
-                    this.townByLetter.get(h.townLetter).push(h)
+                    this.playerInfo.townByLetter.get(h.townLetter).push(h)
                 }
 
                 const polygonGeom = new Phaser.Geom.Polygon(h.points)
@@ -202,7 +195,7 @@ export default class MapScene extends Phaser.Scene {
 
         EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
         EventBus.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
-        EventBus.on(EventsEnum.BONUS_ROAD, this.onBonusRoad, this)
+        EventBus.on(EventsEnum.MARK_HEXAGON, this.markHexagon, this)
 
 
         EventBus.on(EventsEnum.CLOSE_GAME, this.onCloseGame, this)
@@ -222,23 +215,26 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private addToSelected(hexagonIndex: number) {
-        this.hexagons.get(hexagonIndex).isSelected = true
-        this.markHexagon(hexagonIndex)
+        this.playerInfo.hexagons.get(hexagonIndex).isSelected = true
+        this.markHexagon_dep(hexagonIndex)
     }
 
     private removeFromSelected(hexagonIndex: number) {
-        this.hexagons.get(hexagonIndex).isSelected = false
-        this.markHexagon(hexagonIndex)
+        this.playerInfo.hexagons.get(hexagonIndex).isSelected = false
+        this.markHexagon_dep(hexagonIndex)
     }
 
     private markAsConnected(hexagonIndex: number) {
-        this.hexagons.get(hexagonIndex).artifactConnected = true
-        this.markHexagon(hexagonIndex)
+        this.playerInfo.hexagons.get(hexagonIndex).artifactConnected = true
+        this.markHexagon_dep(hexagonIndex)
     }
 
-    private markHexagon(hexagonIndex: number) {
-        const hex = this.hexagons.get(hexagonIndex)
-        const pgo = this.polygonGameObjects.get(hexagonIndex)
+    private markHexagon_dep(hexagonIndex: number) {
+        this.markHexagon(this.playerInfo.hexagons.get(hexagonIndex))
+    }
+
+    private markHexagon(hex: Hexagon) {
+        const pgo = this.polygonGameObjects.get(hex.index)
 
         if (pgo) {
             if (hex.isSelected) {
@@ -263,110 +259,21 @@ export default class MapScene extends Phaser.Scene {
 
     private drawRoad(hexes: Hexagon[]) {
 
-        this.playerInfo.readyTouch = false
-
         const pointA = this.hexagonCenter(hexes[0])
         const pointB = this.hexagonCenter(hexes[1])
 
         this.add.line(0, 0, pointA.x, pointA.y, pointB.x, pointB.y, 0xff0000).setOrigin(0, 0)
             .setLineWidth(3, 3)
 
-        this.addToRoads(hexes[0].index, hexes[1].index)
-
-        //----
-        if (!this.playerInfo.turnComplete) {
-            this.playerInfo.turnComplete = true
-        } else {
-            this.playerInfo.bonusRoad -= 1
-        }
-
-        this.recalcRoadNet()
-        this.checkTownConnection()
-
-        //---
-        EventBus.emit(EventsEnum.MAKE_ROAD_AFTER)
-
-        //---
-        if (this.playerInfo.bonusRoad == 0) {
-            EventBus.emit(EventsEnum.END_TURN)
-        } else {
-            this.playerInfo.readyTouch = true
-        }
-    }
-
-    private addToRoads(a: number, b: number) {
-        if (!this.playerInfo.roads.has(a)) {
-            this.playerInfo.roads.set(a, new Set())
-        }
-        if (!this.playerInfo.roads.has(b)) {
-            this.playerInfo.roads.set(b, new Set())
-        }
-
-        this.playerInfo.roads.get(a).add(b)
-        this.playerInfo.roads.get(b).add(a)
-    }
-
-    private recalcRoadNet() {
-
-        this.playerInfo.townNets.forEach((townHexId, netId) => {
-            const h = this.hexagons.get(townHexId)
-
-            if (netId == h.net) {
-                // эта часть сети ещё ни к кому не присоеденена
-                // можно запускать поиск
-
-                const queue = []
-
-                const visited = new Set<number>()
-                queue.push(h)
-                visited.add(h.index)
-
-                while (queue.length > 0) {
-                    let currHex = queue.pop()
-
-                    this.playerInfo.roads.get(currHex.index)?.forEach((conIndex) => {
-                            const conHex = this.hexagons.get(conIndex)
-
-                            if (!conHex.net || conHex.net > currHex.net) {
-
-                                //регистрация коннекта артефакта
-                                this.checkNewArtifact(conHex)
-
-                                conHex.net = currHex.net
-                                queue.push(conHex)
-                            } else if (conHex.net === currHex.net && !visited.has(conIndex)) {
-                                visited.add(conIndex)
-                                queue.push(conHex)
-                            }
-                        }
-                    )
-                }
-            }
-        })
-    }
-
-    private checkNewArtifact(hex: Hexagon) {
-        if (hex.artifact && !hex.artifactConnected && this.isObject(hex.artifact)) {
-            const prev = this.playerInfo.artifactConnected.get(hex.artifact) || 0
-            this.playerInfo.artifactConnected.set(hex.artifact, prev + 1)
-            this.markAsConnected(hex.index)
-
-            EventBus.emit(EventsEnum.CONNECT_ARTIFACT, hex)
-        }
     }
 
     private onConnectArtifact(hex: Hexagon) {
 
+        this.markHexagon(hex)
         this.drawArtifactFound(hex.artifact)
-        if (this.playerInfo.artifactConnected.get(hex.artifact) == this.mapConfig.roundCount) {
-            // выдать дополнительную дорогу
-            EventBus.emit(EventsEnum.BONUS_ROAD)
-        }
+
     }
 
-    private onBonusRoad() {
-        this.playerInfo.bonusRoad += 1
-    }
 
     private drawArtifactFound(artifact: ArtifactsEnum) {
 
@@ -384,32 +291,17 @@ export default class MapScene extends Phaser.Scene {
     }
 
 
-    private onConnectTown(letter: TownLetters) {
-        this.drawTownConnected(letter)
-    }
+    private onConnectTown(townHexes: Hexagon[]) {
 
-    private checkTownConnection() {
-        const townLetterConnected = this.playerInfo.townLetterConnected
+        // подсветить гексы на карте
+        this.markHexagon(townHexes[0])
+        this.markHexagon(townHexes[1])
 
-        this.townByLetter.forEach((towns: Hexagon[], letter: TownLetters) => {
-            if (!townLetterConnected.has(letter)) {
-                if (towns[0].net && towns[0].net === towns[1].net) {
-                    townLetterConnected.add(letter)
-
-                    this.markAsConnected(towns[0].index)
-                    this.markAsConnected(towns[1].index)
-
-                    EventBus.emit(EventsEnum.CONNECT_TOWN, letter)
-                }
-            }
-        })
-    }
-
-    private drawTownConnected(letter: TownLetters) {
-
-        this.graphics.lineStyle(4, 0x00ff00, 1);
+        // обвести на боковой панеле
+        const letter = townHexes[0].townLetter
 
         const point = this.townZones.get(letter).point
+        this.graphics.lineStyle(4, 0x00ff00, 1);
         this.graphics.strokeCircle(point.x, point.y, 45);
     }
 

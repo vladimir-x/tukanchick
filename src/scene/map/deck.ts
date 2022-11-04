@@ -9,7 +9,7 @@ export default class Deck {
     constructor() {
 
         this.items = []
-
+/*
         for (let i = 0; i < 8; ++i) {
             this.items.push(GroundsEnum.SAND)
         }
@@ -25,12 +25,12 @@ export default class Deck {
         for (let i = 0; i < 2; ++i) {
             this.items.push(GroundsEnum.JOKER)
         }
+*/
 
-/*
-        for (let i = 0; i < 12; ++i) {
+        for (let i = 0; i < 20; ++i) {
             this.items.push(GroundsEnum.JOKER)
         }
-*/
+
         shuffleArray(this.items)
     }
 

@@ -1,6 +1,7 @@
 import {GroundsEnum} from "../enums/grounds.enum";
 import {ArtifactsEnum} from "../enums/artifacts.enum";
 import {TownLetters} from "../enums/townLetters";
+import {Hexagon} from "./hexagon";
 
 export interface PlayerInfo {
 
@@ -46,5 +47,11 @@ export interface PlayerInfo {
     // сети
     //    индекс сети   | индекс: гекс-стартовый город
     townNets: Map<number, number>
+
+    // гексы со всем их свойтсвами
+    hexagons: Map<number, Hexagon>
+
+
+    townByLetter: Map<TownLetters, Hexagon[]>
 
 }
