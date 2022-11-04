@@ -74,6 +74,37 @@ export class SinglePlayDirector extends Director {
     }
 
 
+    protected endRound() {
+
+        this.calculateRoundScore()
+
+
+        if (this.playerInfo.round < this.mapConfig.roundCount) {
+            EventBus.emit(EventsEnum.END_ROUND_AFTER)
+        } else {
+            EventBus.emit(EventsEnum.END_GAME)
+        }
+    }
+
+    private calculateRoundScore() {
+
+        let currentScore = 0
+
+        //артефакты
+        this.playerInfo.artifactConnected.forEach((count, artifact) => {
+
+            if (this.isObject(artifact)) {
+
+                const scores = this.playerInfo.artifactScores.get(artifact)
+                for (let i = 0; i < count; ++i) {
+                    currentScore += scores[i]
+                }
+            }
+        })
+
+        this.playerInfo.scores[this.playerInfo.round - 1] = currentScore
+    }
+
     protected makeRoad(hexes: Hexagon[]) {
 
         if (this.checkSelectedHex(hexes)) {
@@ -216,6 +247,7 @@ export class SinglePlayDirector extends Director {
             townNets: new Map(),
             hexagons: new Map(),
             townByLetter: new Map(),
+            artifactScores: new Map(),
         }
     }
 

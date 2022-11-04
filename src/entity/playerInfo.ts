@@ -54,4 +54,6 @@ export interface PlayerInfo {
 
     townByLetter: Map<TownLetters, Hexagon[]>
 
+    // очки за артефакты:  тип_артефакта | количество соединенных | сколько очков
+    artifactScores: Map<ArtifactsEnum, number[]>
 }

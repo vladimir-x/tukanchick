@@ -89,7 +89,10 @@ export default class MapScene extends Phaser.Scene {
 
         this.artifactMapZones = new Map()
 
-        mapInfo.artifacts.forEach((z) => this.artifactMapZones.set(z.artifact, z))
+        mapInfo.artifacts.forEach((z) => {
+            this.artifactMapZones.set(z.artifact, z)
+            this.playerInfo.artifactScores.set(z.artifact, z.score)
+        })
 
         this.graphics = this.add.graphics();
 
@@ -308,16 +311,7 @@ export default class MapScene extends Phaser.Scene {
 
     private endRound() {
 
-        this.calculateRoundScore()
-
         this.drawScore()
-
-        if (this.playerInfo.round < this.mapConfig.roundCount) {
-            EventBus.emit(EventsEnum.END_ROUND_AFTER)
-        } else {
-            EventBus.emit(EventsEnum.END_GAME)
-        }
-
     }
 
     private showScoreScreen() {
@@ -326,30 +320,12 @@ export default class MapScene extends Phaser.Scene {
 
     private drawScore() {
 
+        // рисуем на боковой панельке подсчитанные очки
         for (const z in ScoreZonesEnum) {
             if (this.playerInfo.scores[z]) {
                 this.scoreZones[z].setText(this.playerInfo.scores[z].toString())
             }
         }
-    }
-
-    private calculateRoundScore() {
-
-        let currentScore = 0
-
-        //артефакты
-        this.playerInfo.artifactConnected.forEach((count, artifact) => {
-
-            if (this.isObject(artifact)) {
-
-                const scores = this.artifactMapZones.get(artifact).score
-                for (let i = 0; i < count; ++i) {
-                    currentScore += scores[i]
-                }
-            }
-        })
-
-        this.playerInfo.scores[this.playerInfo.round - 1] = currentScore
     }
 
     private calculateTotalScore() {

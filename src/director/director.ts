@@ -16,6 +16,7 @@ export abstract class Director {
         EventBus.on(EventsEnum.START_ROUND, this.startRound, this)
         EventBus.on(EventsEnum.START_TURN, this.startTurn, this)
         EventBus.on(EventsEnum.END_TURN, this.endTurn, this)
+        EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
 
         EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
 
@@ -37,6 +38,10 @@ export abstract class Director {
 
     protected endTurn() {
     }
+
+    protected endRound() {
+    }
+
 
     protected makeRoad(hexes: Hexagon[]) {
     }
