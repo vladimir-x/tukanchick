@@ -6,7 +6,6 @@ import {ScenesEnum} from "../../enums/scenes.enum";
 import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
-import {GroundsEnum} from "../../enums/grounds.enum";
 import {ArtifactsEnum} from "../../enums/artifacts.enum";
 import Graphics = Phaser.GameObjects.Graphics;
 import {ArtifactMapZone} from "../../entity/artifactMapZone";
@@ -187,14 +186,9 @@ export default class MapScene extends Phaser.Scene {
         //----
 
 
-        this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
-
-
         EventBus.on(EventsEnum.DRAW_ROAD, this.drawRoad, this)
 
-        EventBus.on(EventsEnum.END_ROUND, this.drawScore, this)
-
-        EventBus.on(EventsEnum.END_GAME, this.drawScore, this)
+        EventBus.on(EventsEnum.END_ROUND_AFTER, this.drawScore, this)
 
 
         EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
@@ -296,8 +290,9 @@ export default class MapScene extends Phaser.Scene {
 
         // рисуем на боковой панельке подсчитанные очки
         for (const z in ScoreZonesEnum) {
-            if (this.playerInfo.scores[z]) {
-                this.scoreZones[z].setText(this.playerInfo.scores[z].toString())
+            const score = this.playerInfo.scores[z]
+            if (score) {
+                this.scoreZones[z].setText(score.toString())
             }
         }
     }
@@ -356,9 +351,6 @@ export default class MapScene extends Phaser.Scene {
         return artifact?.startsWith("TOWN_")
     }
 
-    private isObject(artifact: ArtifactsEnum) {
-        return !this.isTown(artifact)
-    }
 
     private getConfigOrDefault(): MapConfig {
         const res = this.scene.settings.data as MapConfig;

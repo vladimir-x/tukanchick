@@ -3,8 +3,6 @@ export enum EventsEnum {
 
 
     START_GAME = "START_GAME",
-    END_GAME = "END_GAME",
-    END_GAME_AFTER = "END_GAME_AFTER",
 
     START_ROUND = "START_ROUND",
     START_ROUND_AFTER = "START_ROUND_AFTER",
@@ -14,7 +12,6 @@ export enum EventsEnum {
     START_TURN = "START_TURN",
     START_TURN_AFTER = "START_TURN_AFTER",
     END_TURN = "END_TURN",
-    END_TURN_AFTER = "END_TURN_AFTER",
 
     MAKE_ROAD = "MAKE_ROAD",
     DRAW_ROAD = "DRAW_ROAD",

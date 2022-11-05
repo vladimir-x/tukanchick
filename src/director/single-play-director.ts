@@ -36,6 +36,9 @@ export class SinglePlayDirector extends Director {
     }
 
     protected initializeMapAfter() {
+        this.scene.launch(ScenesEnum.MAP_CONTROLS, this.playerInfo)
+
+
         EventBus.emit(EventsEnum.START_ROUND)
     }
 
@@ -79,15 +82,11 @@ export class SinglePlayDirector extends Director {
 
         this.calculateRoundScore()
 
-
-        if (this.playerInfo.round < this.mapConfig.roundCount) {
-            EventBus.emit(EventsEnum.END_ROUND_AFTER)
-        } else {
+        if (this.playerInfo.round >= this.mapConfig.roundCount) {
             this.playerInfo.gameEnd = true
-
             this.calculateTotalScore()
-            EventBus.emit(EventsEnum.END_GAME)
         }
+        EventBus.emit(EventsEnum.END_ROUND_AFTER)
 
         this.showScoreScreen()
     }

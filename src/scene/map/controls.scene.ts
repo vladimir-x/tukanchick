@@ -230,18 +230,4 @@ export default class ControlsScene extends Phaser.Scene {
     }
 
 
-    /* private updateScore() {
-
-         if (this.playerInfo.roundScore[0] > 0) {
-
-         }
-         if (this.playerInfo.roundScore[1] > 0) {
-
-         }
-         if (this.playerInfo.roundScore[2] > 0) {
-
-         }
-     }
- */
-
 }
