@@ -19,15 +19,11 @@ export interface PlayerInfo {
     groundA?: GroundsEnum
     groundB?: GroundsEnum
 
-    // выделенные земли (похоже что не нужно)
-    selectA?: number
-    selectB?: number
-    selectGroundA?: GroundsEnum
-    selectGroundB?: GroundsEnum
-
-
     bonusRoad: number
 
+    /**
+     * Заработанные очки по всем категориям
+     */
     scores: number[]
 
     // признак, что пользователь может делать соединение (не потратил ход)
@@ -54,6 +50,17 @@ export interface PlayerInfo {
 
     townByLetter: Map<TownLetters, Hexagon[]>
 
-    // очки за артефакты:  тип_артефакта | количество соединенных | сколько очков
+    /**
+     * очки за артефакты(сколько начислять)
+     *
+     * тип_артефакта | количество соединенных | сколько очков
+     */
     artifactScores: Map<ArtifactsEnum, number[]>
+
+    /**
+     * очки за города (сколько начислять)
+     *
+     * Буква Города | сколько очков
+     */
+    townScores: Map<TownLetters, number>
 }

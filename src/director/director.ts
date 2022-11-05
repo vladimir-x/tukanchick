@@ -20,6 +20,7 @@ export abstract class Director {
 
         EventBus.on(EventsEnum.MAKE_ROAD, this.makeRoad, this)
 
+        EventBus.on(EventsEnum.CLOSE_GAME, this.closeGame, this)
         //
         EventBus.on(EventsEnum.INITIALIZE_MAP_AFTER, this.initializeMapAfter, this)
     }
@@ -44,5 +45,8 @@ export abstract class Director {
 
 
     protected makeRoad(hexes: Hexagon[]) {
+    }
+
+    protected closeGame() {
     }
 }

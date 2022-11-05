@@ -108,7 +108,10 @@ export default class MapScene extends Phaser.Scene {
 
 
         this.townZones = new Map()
-        mapInfo.towns.forEach((z) => this.townZones.set(z.letter, z))
+        mapInfo.towns.forEach((z) => {
+            this.townZones.set(z.letter, z)
+            this.playerInfo.townScores.set(z.letter, z.score)
+        })
 
 
         //----
@@ -117,7 +120,7 @@ export default class MapScene extends Phaser.Scene {
 
         //----
 
-        this.playerInfo.hexagons.forEach((h: Hexagon, key: number) => {
+        this.playerInfo.hexagons.forEach((h: Hexagon, index: number) => {
 
                 if (this.isTown(h.artifact)) {
                     const townNumber = Number(h.artifact.substring(5))
@@ -161,12 +164,12 @@ export default class MapScene extends Phaser.Scene {
                         if (camera.getDragging()) {
                             this.clearSelected()
                         } else {
-                            this.addToSelected(h.index)
+                            this.addToSelected(h)
                         }
                     })
                     .on('pointerout', (pointer: any, localX: any, localY: any) => {
                         if (this.hexA != h && this.hexB != h) {
-                            this.removeFromSelected(h.index)
+                            this.removeFromSelected(h)
                         }
                     })
             }
@@ -189,19 +192,15 @@ export default class MapScene extends Phaser.Scene {
 
         EventBus.on(EventsEnum.DRAW_ROAD, this.drawRoad, this)
 
-        EventBus.on(EventsEnum.END_ROUND, this.endRound, this)
-        EventBus.on(EventsEnum.END_ROUND_AFTER, this.showScoreScreen, this)
+        EventBus.on(EventsEnum.END_ROUND, this.drawScore, this)
 
-        EventBus.on(EventsEnum.END_GAME, this.endGame, this)
-        EventBus.on(EventsEnum.END_GAME_AFTER, this.showScoreScreen, this)
+        EventBus.on(EventsEnum.END_GAME, this.drawScore, this)
 
 
         EventBus.on(EventsEnum.CONNECT_ARTIFACT, this.onConnectArtifact, this)
         EventBus.on(EventsEnum.CONNECT_TOWN, this.onConnectTown, this)
         EventBus.on(EventsEnum.MARK_HEXAGON, this.markHexagon, this)
 
-
-        EventBus.on(EventsEnum.CLOSE_GAME, this.onCloseGame, this)
 
         //----
         EventBus.emit(EventsEnum.INITIALIZE_MAP_AFTER)
@@ -212,28 +211,14 @@ export default class MapScene extends Phaser.Scene {
 
     }
 
-
-    private sameGround(a: GroundsEnum, b: GroundsEnum): boolean {
-        return a === b || a === GroundsEnum.JOKER || b === GroundsEnum.JOKER
+    private addToSelected(hex: Hexagon) {
+        hex.isSelected = true
+        this.markHexagon(hex)
     }
 
-    private addToSelected(hexagonIndex: number) {
-        this.playerInfo.hexagons.get(hexagonIndex).isSelected = true
-        this.markHexagon_dep(hexagonIndex)
-    }
-
-    private removeFromSelected(hexagonIndex: number) {
-        this.playerInfo.hexagons.get(hexagonIndex).isSelected = false
-        this.markHexagon_dep(hexagonIndex)
-    }
-
-    private markAsConnected(hexagonIndex: number) {
-        this.playerInfo.hexagons.get(hexagonIndex).artifactConnected = true
-        this.markHexagon_dep(hexagonIndex)
-    }
-
-    private markHexagon_dep(hexagonIndex: number) {
-        this.markHexagon(this.playerInfo.hexagons.get(hexagonIndex))
+    private removeFromSelected(hex: Hexagon) {
+        hex.isSelected = false
+        this.markHexagon(hex)
     }
 
     private markHexagon(hex: Hexagon) {
@@ -251,11 +236,9 @@ export default class MapScene extends Phaser.Scene {
     }
 
     private clearSelected() {
-        this.polygonGameObjects.forEach((p: any, index: number) => {
-            this.removeFromSelected(index)
+        this.playerInfo.hexagons.forEach((hex, index) => {
+            this.removeFromSelected(hex)
         })
-        this.playerInfo.selectA = null
-        this.playerInfo.selectB = null
         this.hexA = null
         this.hexB = null
     }
@@ -280,12 +263,12 @@ export default class MapScene extends Phaser.Scene {
 
     private drawArtifactFound(artifact: ArtifactsEnum) {
 
-        this.graphics.lineStyle(4, 0x00ff00, 1);
-
         const conCount = this.playerInfo.artifactConnected.get(artifact)
         const points = this.artifactMapZones.get(artifact)?.points
 
         if (conCount > 0 && points && points.length > 0) {
+            this.graphics.lineStyle(4, 0x00ff00, 1);
+
             for (let i = 0; i < conCount; ++i) {
                 this.graphics.strokeCircle(points[i].x, points[i].y, 45);
             }
@@ -309,15 +292,6 @@ export default class MapScene extends Phaser.Scene {
     }
 
 
-    private endRound() {
-
-        this.drawScore()
-    }
-
-    private showScoreScreen() {
-        this.scene.launch(ScenesEnum.SCORE, this.playerInfo)
-    }
-
     private drawScore() {
 
         // рисуем на боковой панельке подсчитанные очки
@@ -326,45 +300,6 @@ export default class MapScene extends Phaser.Scene {
                 this.scoreZones[z].setText(this.playerInfo.scores[z].toString())
             }
         }
-    }
-
-    private calculateTotalScore() {
-        let total = 0
-
-        //calc town
-        this.playerInfo.townLetterConnected.forEach(letter => {
-                total += this.townZones.get(letter as TownLetters).score
-            }
-        )
-        this.playerInfo.scores[ScoreZonesEnum.TOWN] = total
-
-        // todo: calc bonus
-
-        // calc round sum
-        total += this.playerInfo.scores[ScoreZonesEnum.ROUND0]
-        total += this.playerInfo.scores[ScoreZonesEnum.ROUND1]
-        total += this.playerInfo.scores[ScoreZonesEnum.ROUND2] || 0
-
-
-        this.playerInfo.scores[ScoreZonesEnum.TOTAL] = total
-    }
-
-    private endGame() {
-
-        this.playerInfo.gameEnd = true
-
-        this.calculateTotalScore()
-        this.drawScore()
-
-        EventBus.emit(EventsEnum.END_GAME_AFTER)
-    }
-
-    private onCloseGame() {
-        this.scene.stop(ScenesEnum.SCORE)
-        this.scene.stop(ScenesEnum.MAP_CONTROLS)
-        this.scene.stop(ScenesEnum.MAP)
-
-        this.scene.start(ScenesEnum.MAIN_MENU)
     }
 
     private hexagonCenter(hexagon: Hexagon): Point {

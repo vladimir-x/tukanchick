@@ -10,6 +10,7 @@ import {GroundsEnum} from "../enums/grounds.enum";
 import {Hexagon} from "../entity/hexagon";
 import {ArtifactsEnum} from "../enums/artifacts.enum";
 import {TownLetters} from "../enums/townLetters";
+import {ScoreZonesEnum} from "../enums/scoreZones.enum";
 
 export class SinglePlayDirector extends Director {
 
@@ -82,8 +83,34 @@ export class SinglePlayDirector extends Director {
         if (this.playerInfo.round < this.mapConfig.roundCount) {
             EventBus.emit(EventsEnum.END_ROUND_AFTER)
         } else {
+            this.playerInfo.gameEnd = true
+
+            this.calculateTotalScore()
             EventBus.emit(EventsEnum.END_GAME)
         }
+
+        this.showScoreScreen()
+    }
+
+    private calculateTotalScore() {
+        let total = 0
+
+        //calc town
+        this.playerInfo.townLetterConnected.forEach(letter => {
+                total += this.playerInfo.townScores.get(letter as TownLetters)
+            }
+        )
+        this.playerInfo.scores[ScoreZonesEnum.TOWN] = total
+
+        // todo: calc bonus
+
+        // calc round sum
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND0]
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND1]
+        total += this.playerInfo.scores[ScoreZonesEnum.ROUND2] || 0
+
+
+        this.playerInfo.scores[ScoreZonesEnum.TOTAL] = total
     }
 
     private calculateRoundScore() {
@@ -137,6 +164,18 @@ export class SinglePlayDirector extends Director {
 
     }
 
+
+    protected closeGame() {
+        this.scene.stop(ScenesEnum.SCORE)
+        this.scene.stop(ScenesEnum.MAP_CONTROLS)
+        this.scene.stop(ScenesEnum.MAP)
+
+        this.scene.start(ScenesEnum.MAIN_MENU)
+    }
+
+    private showScoreScreen() {
+        this.scene.launch(ScenesEnum.SCORE, this.playerInfo)
+    }
 
     private addToRoads(a: number, b: number) {
         if (!this.playerInfo.roads.has(a)) {
@@ -248,6 +287,7 @@ export class SinglePlayDirector extends Director {
             hexagons: new Map(),
             townByLetter: new Map(),
             artifactScores: new Map(),
+            townScores: new Map(),
         }
     }
 
