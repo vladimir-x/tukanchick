@@ -1,4 +1,6 @@
 export enum ScenesEnum {
+    LOAD_SCREEN = "LOAD_SCREEN",
+
     MAIN_MENU = "MAIN_MENU",
 
     MAP = "MAP",

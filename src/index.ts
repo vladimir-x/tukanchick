@@ -13,12 +13,13 @@ import {MapConfig} from "./entity/mapConfig";
 import {MultiPlayDirector} from "./director/multi-play-director";
 import {EventBus} from "./scene/bus/EventBus";
 import {EventsEnum} from "./enums/events.enum";
+import LoadScene from "./scene/load/load.scene";
 
 const config = {
     type: Phaser.AUTO,
     parent: 'main-screen',
     fullscreenTarget: 'main-screen',
-    scene: [MainMenuScene, MapScene, ControlsScene, ScoreScene, LobbyScene],
+    scene: [LoadScene, MainMenuScene, MapScene, ControlsScene, ScoreScene, LobbyScene],
     //scene: [MapScene , MainMenuScene, ControlsScene, ScoreScene, LobbyScene ],
     scale: {
         autoCenter: Center.NO_CENTER,

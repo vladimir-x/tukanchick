@@ -22,6 +22,13 @@ export class Image {
         return this
     }
 
+    preloadExtern(texture: string) {
+        this.imageType = ImageType.TEXTURE
+
+        this.textureKey = texture
+        return this
+    }
+
     preloadAtlas(textureAtlasImagePath: string, textureAtlasJsonPath: string) {
         this.imageType = ImageType.ATLAS
 

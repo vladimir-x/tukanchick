@@ -11,7 +11,6 @@ export class Input {
     }
 
     preload() {
-
         return this
     }
 

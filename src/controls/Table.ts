@@ -11,7 +11,6 @@ export class Table {
     }
 
     preload() {
-
         return this
     }
 

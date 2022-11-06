@@ -7,7 +7,6 @@ import {Hexagon} from "../../entity/hexagon";
 import {PlayerInfo} from "../../entity/playerInfo";
 import {EventsEnum} from "../../enums/events.enum";
 import {ArtifactsEnum} from "../../enums/artifacts.enum";
-import Graphics = Phaser.GameObjects.Graphics;
 import {ArtifactMapZone} from "../../entity/artifactMapZone";
 import {MapInfo} from "../../entity/mapInfo";
 import {Button} from "../../controls/button";
@@ -20,6 +19,7 @@ import {EventBus} from "../bus/EventBus";
 import {director} from "../../index";
 import {SinglePlayDirector} from "../../director/single-play-director";
 import {Point} from "../../entity/point";
+import Graphics = Phaser.GameObjects.Graphics;
 
 export default class MapScene extends Phaser.Scene {
 
@@ -59,30 +59,17 @@ export default class MapScene extends Phaser.Scene {
     }
 
     preload() {
-
         this.mapConfig = this.getConfigOrDefault()
-
-        this.textures.remove("map")
-        this.cache.json.remove("info")
-
-        switch (this.mapConfig.island) {
-            case IslandEnum.PETIT:
-                this.load.image("map", Assets.MAP_ISLAND_PETIT);
-                this.load.json("info", Assets.MAPINFO_ISLAND_PETIT)
-                break;
-            case IslandEnum.GRANDE:
-                this.load.image("map", Assets.MAP_ISLAND_GRANDE);
-                this.load.json("info", Assets.MAPINFO_ISLAND_GRANDE)
-                break;
-
-        }
-
     }
 
     create() {
-        const map = this.add.image(0, 0, "map").setOrigin(0, 0)
 
-        const mapInfo: MapInfo = this.cache.json.get("info")
+        const mapAssertTextureName = this.mapConfig.island == IslandEnum.GRANDE ?  Assets.MAP_ISLAND_GRANDE : Assets.MAP_ISLAND_PETIT;
+        const mapAssertInfoName = this.mapConfig.island == IslandEnum.GRANDE ?  Assets.MAPINFO_ISLAND_GRANDE : Assets.MAPINFO_ISLAND_PETIT;
+
+        const map = this.add.image(0, 0, mapAssertTextureName).setOrigin(0, 0)
+
+        const mapInfo: MapInfo = this.cache.json.get(mapAssertInfoName)
 
         mapInfo.hexagons.forEach((h) => this.playerInfo.hexagons.set(h.index, h))
 

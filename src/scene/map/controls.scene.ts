@@ -39,45 +39,23 @@ export default class ControlsScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAP_CONTROLS)
 
-        this.back = new Image(this)
+        this.back = new Image(this).preloadExtern(Assets.SAND_1)
 
-        this.groundA = new Image(this)
-        this.groundB = new Image(this)
+        this.groundA = new Image(this).preloadAtlasExtern(Assets.GROUNDS_IMAGE)
+        this.groundB = new Image(this).preloadAtlasExtern(Assets.GROUNDS_IMAGE)
 
-        this.bonusRoad = new Button(this)
+        this.bonusRoad = new Button(this).preloadExtern(Assets.SAND_1)
 
-        this.artifactSplash = new Image(this)
+        this.artifactSplash = new Image(this).preloadAtlasExtern(Assets.STAFF_IMAGE)
 
-        this.roundLabel = new Button(this)
-        this.nextTurnLabel = new Button(this)
+        this.roundLabel = new Button(this).preloadExtern(Assets.SAND_1)
+        this.nextTurnLabel = new Button(this).preloadExtern(Assets.SAND_1)
 
-        this.roundCount = new Button(this)
+        this.roundCount = new Button(this).preloadExtern(Assets.SAND_1)
         this.deckSizeCount = new Button(this)
-        this.turnCount = new Button(this)
+        this.turnCount = new Button(this).preloadExtern(Assets.SAND_1)
 
         this.artifactZones = new Map()
-
-    }
-
-    preload() {
-
-        this.back.preload(Assets.SAND_1)
-
-        this.groundA.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
-        this.groundB.preloadAtlas(Assets.GROUNDS_IMAGE, Assets.GROUNDS_JSON)
-
-        this.bonusRoad.preload(Assets.SAND_1)
-
-        this.artifactSplash.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
-
-        this.roundLabel.preload(Assets.SAND_1)
-        this.nextTurnLabel.preload(Assets.SAND_1)
-
-        this.roundCount.preload(Assets.SAND_1)
-        this.turnCount.preload(Assets.SAND_1)
-
-        this.load.json(Assets.CONTROLS_INFO, Assets.CONTROLS_INFO)
-
 
         for (const a in ArtifactsEnum) {
             if (!a.toString().startsWith("TOWN")) {
@@ -90,8 +68,9 @@ export default class ControlsScene extends Phaser.Scene {
         for (const t in TownLetters) {
             this.artifactZones.set(t, new Image(this).preloadAtlasExtern(Assets.STAFF_IMAGE))
         }
+    }
 
-
+    preload() {
         this.playerInfo = this.scene.settings.data as PlayerInfo
     }
 

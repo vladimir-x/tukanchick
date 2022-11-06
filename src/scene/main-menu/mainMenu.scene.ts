@@ -21,23 +21,18 @@ export default class MainMenuScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.MAIN_MENU)
 
-        this.background = new Image(this)
-        this.petitButton = new Button(this)
-        this.grandeButton = new Button(this)
+        this.background = new Image(this).preloadExtern(Assets.MENU_LOGO)
+        this.petitButton = new Button(this).preloadAtlasExtern(Assets.STAFF_IMAGE)
+        this.grandeButton = new Button(this).preloadAtlasExtern(Assets.STAFF_IMAGE)
 
-        this.multiplayerButton = new Button(this)
+        this.multiplayerButton = new Button(this).preloadExtern(Assets.SAND_1)
 
-        this.enableNet = false
+        this.enableNet = true
 
     }
 
     preload() {
 
-        this.background.preload(Assets.MENU_LOGO)
-        this.petitButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
-        this.grandeButton.preloadAtlas(Assets.STAFF_IMAGE, Assets.STAFF_JSON)
-
-        this.multiplayerButton.preload(Assets.SAND_1)
     }
 
     create() {

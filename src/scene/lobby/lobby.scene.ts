@@ -40,8 +40,8 @@ export default class LobbyScene extends Phaser.Scene {
         this.commonCaptionText = new Button(this)
 
 
-        this.createLobbyButton = new Button(this)
-        this.joinLobbyButton = new Button(this)
+        this.createLobbyButton = new Button(this).preloadExtern(Assets.SAND_1)
+        this.joinLobbyButton = new Button(this).preloadExtern(Assets.SAND_1)
 
         this.createdLobbyIdText = new Button(this)
         this.joinLobbyCaptionText = new Button(this)
@@ -50,22 +50,13 @@ export default class LobbyScene extends Phaser.Scene {
         this.partyMemberTable = new Table(this)
 
 
-        this.startPetitButton = new Button(this)
-        this.startGrandeButton = new Button(this)
-        this.exitButton = new Button(this)
+        this.startPetitButton = new Button(this).preloadExtern(Assets.SAND_1)
+        this.startGrandeButton = new Button(this).preloadExtern(Assets.SAND_1)
+        this.exitButton = new Button(this).preloadExtern(Assets.SAND_1)
     }
 
     preload() {
-
         this.config = this.scene.settings.data as LobbyConfig;
-
-        this.createLobbyButton.preload(Assets.SAND_1)
-        this.joinLobbyButton.preload(Assets.SAND_1)
-
-        this.startPetitButton.preload(Assets.SAND_1)
-        this.startGrandeButton.preload(Assets.SAND_1)
-        this.exitButton.preload(Assets.SAND_1)
-
     }
 
     create() {

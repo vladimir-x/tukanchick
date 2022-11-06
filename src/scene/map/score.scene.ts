@@ -25,10 +25,10 @@ export default class ScoreScene extends Phaser.Scene {
     constructor() {
         super(ScenesEnum.SCORE)
 
-        this.back = new Image(this)
+        this.back = new Image(this).preloadExtern(Assets.SCORES_IMAGE)
 
-        this.message = new Button(this)
-        this.next = new Button(this)
+        this.message = new Button(this).preloadExtern(Assets.SAND_1)
+        this.next = new Button(this).preloadExtern(Assets.SAND_1)
 
         this.scoreZones = []
         for (const z in ScoreZonesEnum) {
@@ -38,12 +38,6 @@ export default class ScoreScene extends Phaser.Scene {
     }
 
     preload() {
-
-        this.back.preload(Assets.SCORES_IMAGE)
-
-        this.message.preload(Assets.SAND_1)
-        this.next.preload(Assets.SAND_1)
-
 
         this.playerInfo = this.scene.settings.data as PlayerInfo
     }

@@ -12,8 +12,8 @@ export default class Client {
         console.log("[Client connect]");
         this.socket?.terminate();
 
-        //this.socket = new WebSocket("wss://tukanchick.herokuapp.com/exchange");
-        this.socket = new WebSocketExt("ws://192.168.1.68:5000/exchange");
+        //this.socket = new WebSocketExt("wss://tukanchick.herokuapp.com/exchange");
+        this.socket = new WebSocketExt("ws://192.168.1.65:5000/exchange");
 
         return this
     }
